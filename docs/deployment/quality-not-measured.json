@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "status": "NOT_MEASURED",
+  "evidence": null,
+  "metrics": null,
+  "byCategory": null,
+  "scarcity": null,
+  "release": {
+    "status": "BLOCKED",
+    "blockers": [
+      "MISSING_EVALUATION_MANIFEST_AND_RUNS"
+    ],
+    "provisionalContractTargets": {
+      "independentTargets": 100,
+      "tuneGroups": 50,
+      "holdoutGroups": 50,
+      "holdoutPositiveGroups": 40,
+      "holdoutNegativeGroups": 10,
+      "hitAt5": 0.85,
+      "maximumBadAt5": 0.1
+    },
+    "authorizesProductRelease": false
+  },
+  "limitations": [
+    "Offline calculation only: the harness performs no provider, merchant, image, deployment, or human-review verification.",
+    "REAL/LIVE flags, reviewer identities, rights, blind review, budget, seals, baseline approval and audits are supplied attestations. Two IDs do not prove two real people. Retain independently auditable evidence.",
+    "REPLAY does not establish current stock, current price or current source coverage. SYNTHETIC never establishes actual search quality.",
+    "Point estimates include every first target attempt, including failure, expiry and empty results. References and retries never increase primary scores.",
+    "Intervals assume independence between declared target groups, not within groups. Group weights equal target counts divided by target count; sum(weight^2) preserves target-weighted point estimates. Unknown dependence cannot be detected from hashes alone.",
+    "Wilson 95% is used only for independent Bernoulli target groups. Bounded metrics use conservative weighted Hoeffding 95%; ratios use joint 97.5% mean bounds with a union bound. Intervals are pointwise, not simultaneous across all reported metrics. One independent group or no denominator has a null interval.",
+    "This report cannot authorize a product release. Security, design, operations and actual LIVE integration evidence remain separate release requirements."
+  ]
+}

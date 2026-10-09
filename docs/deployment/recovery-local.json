@@ -1,0 +1,140 @@
+{
+  "evaluationId": "recovery-1791539563591",
+  "startedAt": "2026-10-09T09:52:43.591Z",
+  "exportedAt": "2026-10-09T09:52:48.474Z",
+  "restoredAt": "2026-10-09T09:52:48.554Z",
+  "completedAt": "2026-10-09T09:52:54.522Z",
+  "gitSha": "5486301e0fbf8b2d3c54e1bb2d3b88ab1ad0ff81",
+  "artifactSourceDirty": true,
+  "environment": "ISOLATED_LOCAL_PGLITE",
+  "mode": "SYNTHETIC_FIXTURE",
+  "liveProductSearchSuccess": false,
+  "paidProviderCalls": 0,
+  "productionWrites": 0,
+  "resourceCostUsd": 0,
+  "checks": [
+    {
+      "name": "rollback rejects undrained active search",
+      "pass": true
+    },
+    {
+      "name": "backup excludes upload keys, job leases and expired snapshots",
+      "pass": true
+    },
+    {
+      "name": "fresh independent PostgreSQL restores three unexpired searches",
+      "pass": true
+    },
+    {
+      "name": "restored active search explicitly fails and is never enqueued",
+      "pass": true
+    },
+    {
+      "name": "known spend remains and post-loss reconciliation is required",
+      "pass": true
+    },
+    {
+      "name": "uncertain reservations retain full amount and state",
+      "pass": true
+    },
+    {
+      "name": "expired run does not erase its unresolved global reservation",
+      "pass": true
+    },
+    {
+      "name": "interrupted provider remains uncertain",
+      "pass": true
+    },
+    {
+      "name": "historical snapshot and ranking version preserved byte for byte",
+      "pass": true
+    },
+    {
+      "name": "COMPLETED and PARTIAL preserve original owners, state, expiry and version",
+      "pass": true
+    },
+    {
+      "name": "restored recommendations retain product and offer relational ownership",
+      "pass": true
+    },
+    {
+      "name": "neither expired search nor expired snapshot revived",
+      "pass": true
+    },
+    {
+      "name": "no image object or lease restored",
+      "pass": true
+    },
+    {
+      "name": "restored terminal jobs cannot be claimed",
+      "pass": true
+    },
+    {
+      "name": "old worker lease is fenced after restore",
+      "pass": true
+    },
+    {
+      "name": "restored budget kill switch blocks new paid search admission",
+      "pass": true
+    },
+    {
+      "name": "repeated terminal settlement does not release or double-charge unknown usage",
+      "pass": true
+    },
+    {
+      "name": "restored RLS hides another owner search",
+      "pass": true
+    },
+    {
+      "name": "restored RLS permits original owner metadata",
+      "pass": true
+    },
+    {
+      "name": "restore refuses overwrite of an existing database",
+      "pass": true
+    },
+    {
+      "name": "expired backup rejected rather than resurrecting TTL data",
+      "pass": true
+    },
+    {
+      "name": "tampered metadata checksum rejected",
+      "pass": true
+    },
+    {
+      "name": "drained recovered database satisfies code-only rollback preflight",
+      "pass": true
+    },
+    {
+      "name": "unknown schema changes block old code rollback",
+      "pass": true
+    },
+    {
+      "name": "actual worker HTTP handler finds no restored work or paid call",
+      "pass": true
+    },
+    {
+      "name": "retained API/worker artifact copy restores all exact checksums",
+      "pass": true
+    },
+    {
+      "name": "corrupted artifact rejected then prior exact artifact restored",
+      "pass": true
+    },
+    {
+      "name": "mismatched build commit rejected even with a recomputed file checksum",
+      "pass": true
+    },
+    {
+      "name": "production validator refuses dirty drill artifact",
+      "pass": true
+    }
+  ],
+  "limitations": [
+    "No production user data was exported or restored.",
+    "No cloud service or production database was rolled back.",
+    "ARM64 release bytes were restored and checked; cloud runtime rollback remains untested.",
+    "Anonymous refresh-session secrets and images are not backed up; re-upload may be necessary.",
+    "No RPO/RTO or zero-loss guarantee; reconciliation covers the possible loss interval after backup."
+  ]
+}

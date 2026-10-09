@@ -35,7 +35,8 @@ The initial frontend preview does not authorize enabling LIVE searches before ba
 
 1. Obtain the user's historical OpenAI pilot expenditure, then reconcile the cumulative ledger. Unknown historical spend must fail closed under the Notion USD 20 ceiling. The safe budget bootstrap defaults to a dry run and preserves disabled execution even when explicitly applied.
 2. After rates, model capabilities, cost bounds, and remaining free quotas pass their release gates, run a budgeted real OpenAI canary and actual product-search tests. Verify persisted execution, cancellation, quality holdouts, and at least ten cost smoke cases within the remaining cumulative budget. Public upload, owner isolation, cleanup, and scheduling have passed; they do not establish LIVE product-search success.
-3. Secure sufficient trustworthy product evidence from permitted sources. Musinsa is blocked pending an authorized data path, and the inspected 11st samples produced no eligible candidates. Keep zero-results and partial failures honest. Complete the remaining functional-control visual review and distinguish all REPLAY fixtures from LIVE evidence.
+3. Secure sufficient trustworthy product evidence from permitted sources. Musinsa is blocked pending an authorized data path, and the inspected merchant samples produced no fully eligible candidates. Keep zero-results and partial failures honest. Complete the remaining functional-control visual review and distinguish all REPLAY fixtures from LIVE evidence.
+4. Obtain independently reviewed human labels and a sealed tune/holdout dataset meeting the original sample requirements. The offline evaluator and synthetic tests do not replace this evidence. Retained release artifacts and local PostgreSQL recovery likewise do not establish cloud runtime recovery or a production canary.
 
 ## Official sources checked
 
@@ -47,7 +48,7 @@ The initial frontend preview does not authorize enabling LIVE searches before ba
 
 No paid infrastructure, automatic billing, or additional paid services were enabled during this readiness check.
 
-## Phase B visual and UI evidence
+## Earlier Phase B visual and UI evidence
 
 The 1586×992 desktop and 390×844 mobile screenshots were inspected directly. Desktop logo, industrial background, clothing collage, and the distinctive main headline preserve the source image. The upload form and hot-deal controls remain real, keyboard-operable HTML controls. Mobile keeps the yellow/black palette, cut corners, original logo, and layered clothing artwork.
 
@@ -104,8 +105,18 @@ Public merchant inspections are recorded separately from LIVE search. All 12 ins
 
 ## Continued fidelity and quota verification
 
-The next desktop revision preserves the original static subhead, three-step captions/icons, and lower hot-deal copy directly in the source artwork. Accessible semantic text remains in the DOM, and forced-colors mode renders that text independently of decorative backgrounds. Upload text and controls, navigation, filters, and the search field remain live DOM controls. The header logo's one-pixel offset, desktop filter widths and upload/search button outlines were corrected.
+The desktop revision at `5486301e0fbf8b2d3c54e1bb2d3b88ab1ad0ff81` preserves the original static subhead, three-step captions/icons, and lower hot-deal copy directly in the source artwork. Accessible semantic text remains in the DOM, and forced-colors mode renders that text independently of decorative backgrounds. Upload text and controls, navigation, filters, and the search field remain live DOM controls. The header logo's one-pixel offset, desktop filter widths and upload/search button outlines were corrected.
 
 The resulting unmasked 1586×992 comparison has **1.713%** of pixels above the same 24/255 channel-difference criterion, down from 3.696%; mean channel difference is **1.625/255**. Logo, collage and headline regions have zero difference. Remaining differences are in the real control typography, icons and adjacent text backdrops. This is diagnostic evidence, not a newly invented acceptance threshold. The report is `docs/deployment/visual-regression.json`. Nine local home checks pass, including high-contrast reading and file selection, five viewport sizes and replacement/decoding/privacy behavior. The CI now retains successful screenshots and the unmasked comparison for three days as `visual-<commit>`; these are CI fixture/UI captures, never LIVE product-search evidence.
 
+The revision passed [CI](https://github.com/NoNamad5196/ssandevisthan/actions/runs/37912371980) and [Pages deployment](https://github.com/NoNamad5196/ssandevisthan/actions/runs/37912553557). Its immutable frontend is https://4b74d377.ssandevisthan.pages.dev. A fresh Chromium capture of the public default domain independently reproduced the same 1.713% / 1.625 metrics after all fonts, DOM images and CSS backgrounds decoded. HTTP/assets returned 200, with no overflow or JavaScript errors. This capture made no uploads or paid calls.
+
 The read-only **18:18 KST** account audit is `docs/deployment/quota-audit-2026-10-09.json`. GitHub Free reported 14 of 2,000 Actions minutes, with 1,986 remaining from the displayed values and net billable usage USD 0 after included discounts. Storage displayed 0 of 0.5 GB, a rounded number rather than zero bytes. Neon explicitly excludes Functions counters from Console usage summaries; the documented consumption API is unavailable to Free accounts and has no Functions metric. Thus actual account/project active-hour, waiting-hour and invocation headroom remains unknown. Pages monthly remaining builds likewise were not exposed in the inspected dashboard or documented API; deployment counts and Workers build minutes are not substitutes. No plan, permission or verification flag was changed.
+
+## Recovery, source adoption and quality evaluation checkpoint
+
+At **18:55 KST**, root/API TypeScript checks and **377 tests in 16 files** passed. The Vite build and a credential scan of 167 tracked/build text files also passed. This includes 24 synthetic quality-calculation tests, 49 deployment-setting/rollback-target regressions, and the new Coupang OFF/PROVISIONAL request and generic-fallback checks. No applied migration bytes changed.
+
+The isolated local recovery drill passed **29 checks**, preserving known spend, uncertain reservations, owners, terminal snapshots and original expiry while preventing job revival. The release workflow now seals API/worker/sweep artifacts and retains them for seven days after an isolated drill. Missing persistent settings, dirty or damaged artifacts, and rollback preflight against a different database are rejected. Independent code review confirmed the setting and target-binding fixes. Official Neon GET metadata separately verified the current production target; that read-only check did not perform a rollback.
+
+The offline quality evaluator preserves initial attempts and failures, separates retries/references, checks split leakage and supplied blind-review evidence, and computes metrics with group-aware intervals. `docs/deployment/quality-not-measured.json` records the actual present condition: **NOT_MEASURED**, null metrics and release BLOCKED. No actual human labels, sealed REAL holdout, paid model response, LIVE product-search success, or cloud-runtime rollback is implied by these deterministic checks.

@@ -7,7 +7,7 @@
 - 구현 계약: `docs/contracts/`에 보존한 현재 Notion v3 문서 7개
 - 디자인 원본: `design/reference/original.png` (1586×992)
 
-공개 프론트엔드와 Neon 백엔드가 연결되어 있습니다. 공개 HTTPS 브라우저에서 실제 익명 인증, 사진 업로드·정규화·확정·삭제를 검증했습니다. **AI 상품 검색은 아직 출시 전입니다.** OpenAI 누적 비용 검증이 끝나기 전에는 검색을 명시적으로 차단합니다. 테스트 fixture를 실제 상품 검색 성공으로 표시하지 않습니다.
+공개 프론트엔드와 Neon 백엔드가 연결되어 있습니다. 공개 HTTPS 브라우저에서 실제 익명 인증, 사진 업로드·정규화·확정·삭제를 검증했습니다. **AI 상품 검색은 아직 출시 전입니다.** 현재 과거 OpenAI 누적 비용이 미확인이라 유료 검색을 차단하고 있습니다. 무료 잔여 한도, 실제 상품 근거와 LIVE 검색, 사람 검수 평가셋도 출시 전 검증이 필요합니다. 테스트 fixture를 실제 상품 검색 성공으로 표시하지 않습니다.
 
 ## 실행과 검증
 
@@ -34,6 +34,7 @@ node scripts/verify-secrets.mjs
 - `apps/api`: Neon Node.js Functions 어댑터, 익명 인증, PostgreSQL·비공개 Object Storage
 - `packages/contracts`: 엄격한 v3 DTO·enum·Zod 검증·OpenAPI
 - `packages/search-core`: 근거 검사, Similarity Gate, 가격 코호트·결정적 정렬
+- `packages/quality`: 실제/합성 평가 구분, 사람 라벨·분리 검증, 실패·빈 결과를 포함하는 오프라인 품질 평가
 - `supabase/shared`: 공통 검색 파이프라인, OpenAI, 안전한 외부 요청, 상품 추출
 - `supabase/migrations`: 계약에 따른 PostgreSQL 스키마·트랜잭션·RLS
 - `deploy/neon`: 사용자 요청에 따라 선택한 대체 무료 백엔드 배포
@@ -61,5 +62,10 @@ OpenAI 외 유료 인프라는 활성화하지 않습니다. 전체 파일럿의
 - `docs/merchant-verification.md`: 실제 판매처 응답의 성공·실패 근거. 적격 상품이 없으면 그대로 기록합니다.
 - `docs/openai-cost-verification.md`: 비용 상한의 근거, 구현 검증, 아직 필요한 계정 확인.
 - `docs/deployment-readiness.md`: 배포·글꼴·시각 비교 및 잔여 항목.
+- `docs/deployment/quota-audit-2026-10-09.json`: 계정에서 확인한 무료 사용량과 확인할 수 없었던 한도.
+- `docs/deployment/recovery-local.json`: 격리된 로컬 PostgreSQL 복구 검사. 클라우드 복구 성공을 뜻하지 않습니다.
+- `docs/deployment/quality-not-measured.json`: 실제 평가 데이터 미제공 상태의 품질 보고서. 지표는 `null`, 출시는 차단 상태입니다.
+
+품질 평가는 `node scripts/evaluate-quality.mjs`로 실행합니다. 입력이 없으면 `NOT_MEASURED`와 출시 차단을 보고하며 종료 코드 1을 반환합니다. 평가 데이터 형식과 사람 검토·holdout 절차는 `packages/quality/README.md`, 배포물 보존과 복구 절차는 `deploy/neon/RECOVERY.md`에 있습니다. 합성 라벨이나 재생 테스트를 실제 사람 평가·LIVE 검색으로 승격하지 않습니다.
 
 운영 집계는 서버 자격 증명을 환경변수 또는 Git에서 제외한 설정으로 준비한 뒤 `node deploy/neon/inspect.mjs`로 확인합니다. 이 명령은 읽기 전용 트랜잭션을 사용하고 사용자 사진·프롬프트·토큰을 출력하지 않습니다. 배포·마이그레이션·스케줄러 절차는 `deploy/neon/README.md`를 따릅니다.

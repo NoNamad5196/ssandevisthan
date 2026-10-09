@@ -1,20 +1,13 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
-import {randomBytes} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {resolve} from 'node:path';
-const root=resolve(import.meta.dirname,'../..'),project='lucky-sun-06718695',branch='br-polished-resonance-az03nnva',slug='api';
+import {verifyRelease} from './release.mjs';
+import {validateBackendSettings} from './settings.mjs';
+import {PRODUCTION_TARGET} from './target.mjs';
+const root=resolve(import.meta.dirname,'../..'),{project,branch,slug}=PRODUCTION_TARGET;
 const secretPath=resolve(root,'.secrets/backend.env.json');
 let credentials={};try{credentials=JSON.parse(await readFile(resolve(root,'.secrets/neon.json'),'utf8'));}catch{}
-let settings;try{settings=JSON.parse(process.env.NEON_BACKEND_ENV_JSON??await readFile(secretPath,'utf8'));}catch{
-  if(process.env.CI){
-    const keys=['PUBLIC_API_URL','CORS_ORIGINS','AUTH_JWT_SECRET_BASE64','INTERNAL_WORKER_SECRET','SCHEDULE_PATH_TOKEN','OPENAI_API_KEY','OPENAI_MODEL','PAID_EXECUTION_ENABLED','NORMALIZER_VERIFIED','EGRESS_VERIFIED','NORMALIZER_VERSION','INPUT_BUCKET','VERIFIED_CLIENT_IP_HEADER'];
-    settings=Object.fromEntries(keys.map(key=>[key,process.env[key]??'']));
-    for(const key of ['PUBLIC_API_URL','CORS_ORIGINS','AUTH_JWT_SECRET_BASE64','INTERNAL_WORKER_SECRET','SCHEDULE_PATH_TOKEN'])if(!settings[key])throw new Error(`CI_REQUIRES_PERSISTED_${key}`);
-  }else{
-  settings={PUBLIC_API_URL:'',CORS_ORIGINS:'https://ssandevisthan.pages.dev',AUTH_JWT_SECRET_BASE64:randomBytes(32).toString('base64'),INTERNAL_WORKER_SECRET:randomBytes(32).toString('base64url'),SCHEDULE_PATH_TOKEN:randomBytes(32).toString('base64url'),OPENAI_MODEL:'gpt-6.1-sol',PAID_EXECUTION_ENABLED:'false',NORMALIZER_VERIFIED:'false',EGRESS_VERIFIED:'false',NORMALIZER_VERSION:'sharp-webp-v3-1',INPUT_BUCKET:'search-images',VERIFIED_CLIENT_IP_HEADER:''};
-  await mkdir(resolve(root,'.secrets'),{recursive:true});await writeFile(secretPath,JSON.stringify(settings,null,2),{flag:'wx'});
-  }
-}
+let settings;try{settings=validateBackendSettings(JSON.parse(process.env.NEON_BACKEND_ENV_JSON??await readFile(secretPath,'utf8')));}catch{throw Error('PERSISTENT_DEPLOYMENT_SETTINGS_INVALID');}
 const apiKey=process.env.NEON_API_KEY??credentials.NEON_API_KEY;if(!apiKey)throw new Error('NEON_API_KEY_REQUIRED');
 const base=`https://console.neon.tech/api/v2/projects/${project}/branches/${branch}/functions/${slug}`;
 const headers={Authorization:`Bearer ${apiKey}`};
@@ -29,8 +22,10 @@ if(command==='trigger'){
   const safe={id:trigger.trigger_id,enabled:trigger.enabled,nextRunAt:trigger.next_run_at};await writeFile(resolve(root,'docs/deployment/schedule.json'),JSON.stringify(safe,null,2)+'\n');console.info(JSON.stringify(safe));
 }
 if(command==='deploy'||command==='configure'){
+  const bundle=resolve(process.env.NEON_BUNDLE_DIR??resolve(root,'.cache/neon-bundle'));
+  await verifyRelease(bundle,process.env.EXPECTED_SHA);
   const cli=process.env.NEON_CLI_PATH??resolve(root,'node_modules/neon/dist/cli.js');
-  const args=[cli,'functions','deploy',slug,'--project-id',project,'--branch',branch,'--src',resolve(root,'.cache/neon-bundle'),'--runtime','nodejs24','--no-bundle','--wait'];
+  const args=[cli,'functions','deploy',slug,'--project-id',project,'--branch',branch,'--src',bundle,'--runtime','nodejs24','--no-bundle','--wait'];
   for(const [key,value] of Object.entries(settings))args.push('--env',`${key}=${value}`);
   const child=spawn(process.execPath,args,{cwd:root,env:{...process.env,NEON_API_KEY:apiKey},stdio:['ignore','pipe','pipe'],windowsHide:true});
   let output='';child.stdout.on('data',s=>output+=s);child.stderr.on('data',s=>output+=s);

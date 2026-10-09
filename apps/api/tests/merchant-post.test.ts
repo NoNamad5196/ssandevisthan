@@ -26,3 +26,30 @@ describe('merchant source policy and narrow POST validation (mock transport, no 
   await expect(f.fetcher.get('https://www.11st.co.kr/products/123','html',Date.now()+20000)).rejects.toThrow('SOURCE_POLICY_BLOCKED');expect(f.get).toHaveBeenCalledOnce();expect(f.resolve).toHaveBeenCalledOnce();
  });
 });
+
+describe('Coupang PROVISIONAL adapter remains OFF (synthetic transport only)',()=>{
+ it.each([
+  ['https://coupang.com/vp/products/123','html'],
+  ['https://www.coupang.com/vp/products/123?itemId=456&vendorItemId=789','html'],
+  ['https://m.coupang.com/vm/products/123','html'],
+  ['https://WWW.COUPANG.COM./vp/products/123','html'],
+  ['https://coupangcdn.com/product.webp','image'],
+  ['https://thumbnail.coupangcdn.com/product.jpg','image'],
+  ['https://image.coupangcdn.com/product.png','image'],
+  ['https://THUMBNAIL.COUPANGCDN.COM./product.webp','image'],
+ ] as const)('blocks %s before DNS, source lease, or HTTP',async(url,kind)=>{
+  const f=fixture();await expect(f.fetcher.get(url,kind,Date.now()+20000)).rejects.toMatchObject({code:'SOURCE_POLICY_BLOCKED',status:403,retryable:false});
+  expect(f.resolve).not.toHaveBeenCalled();expect(f.enter).not.toHaveBeenCalled();expect(f.get).not.toHaveBeenCalled();
+ });
+ it.each([
+  ['https://www.coupang.com/vp/products/123','html'],
+  ['https://thumbnail.coupangcdn.com/product.webp','image'],
+ ] as const)('blocks a redirect to %s without following it',async(location,kind)=>{
+  const f=fixture();f.get.mockResolvedValue({url:'https://merchant.example.com/source',status:302,headers:new Headers({location}),bytes:new Uint8Array()});
+  await expect(f.fetcher.get('https://merchant.example.com/source',kind,Date.now()+20000)).rejects.toThrow('SOURCE_POLICY_BLOCKED');
+  expect(f.get).toHaveBeenCalledOnce();expect(f.resolve).toHaveBeenCalledOnce();expect(f.enter).toHaveBeenCalledOnce();
+ });
+ it('matches domain boundaries rather than incidental brand text',()=>{
+  for(const url of ['https://merchant.example/coupang.com','https://coupang.com.example/product','https://notcoupangcdn.com/product.webp'])expect(()=>assertSourcePolicy(new URL(url))).not.toThrow();
+ });
+});

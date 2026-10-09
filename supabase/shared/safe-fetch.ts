@@ -13,6 +13,10 @@ export function assertSourcePolicy(url:URL):void{
   // fixtures are retained for a future explicitly authorized feed/integration.
   const host=url.hostname.toLowerCase().replace(/\.$/,'');
   if(host==='musinsa.com'||host.endsWith('.musinsa.com'))throw new AppError('SOURCE_POLICY_BLOCKED',403);
+  // Coupang contract v2 §8: adoption is OFF/PROVISIONAL until its image,
+  // variant, price-linkage and quota gates are measured. Generic extraction
+  // and direct CDN requests must not silently enable an unverified adapter.
+  if(['coupang.com','coupangcdn.com'].some(domain=>host===domain||host.endsWith('.'+domain)))throw new AppError('SOURCE_POLICY_BLOCKED',403);
 }
 function abortBound<T>(promise:Promise<T>,signal:AbortSignal,late?:(value:T)=>void):Promise<T>{
   return new Promise((resolve,reject)=>{

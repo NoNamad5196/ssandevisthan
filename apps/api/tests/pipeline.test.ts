@@ -2,12 +2,31 @@ import {describe,it,expect,vi,afterEach} from 'vitest';
 import {rankPayload,processJob} from '../../../supabase/shared/pipeline.ts';
 import {OpenAIProvider} from '../../../supabase/shared/providers/openai.ts';
 import {AppError} from '../../../supabase/shared/runtime.ts';
+import * as generic from '../../../supabase/shared/extractors/generic.ts';
+import {SafeFetcher} from '../../../supabase/shared/safe-fetch.ts';
 const db={rows:async()=>[]} as any;
 const run={id:'fixture',mode:'IMAGE_SIMILAR',result_limit:10,warning_codes:[],deadline_at:new Date(Date.now()+90000).toISOString()};
 describe('terminal state distinguishes incomplete deadline coverage from a reliable empty result',()=>{
  it('reports NO_RELIABLE_MATCH only for a completed reliable empty pool',async()=>{expect((await rankPayload(db,run)).terminal).toBe('NO_RELIABLE_MATCH');});
  it('reports EXPIRED for deadline budget exhaustion without recommendations',async()=>{const r=await rankPayload(db,run,true);expect(r.terminal).toBe('EXPIRED');expect(r.failure.code).toBe('DEADLINE_EXCEEDED');expect(r.warnings).toEqual([]);});
  it('recognizes an elapsed absolute deadline without a caller hint',async()=>{expect((await rankPayload(db,{...run,deadline_at:new Date(0).toISOString()})).terminal).toBe('EXPIRED');});
+});
+
+describe('unverified Coupang source cannot enter generic extraction',()=>{
+ afterEach(()=>vi.restoreAllMocks());
+ it('retains rejected discoveries and schedules the next stage without adapter or network calls',async()=>{
+  const active={...run,status:'RUNNING',deadline_at:new Date(Date.now()+90000).toISOString()},committed:any[]=[];
+  const candidates=['https://www.coupang.com/vp/products/123?itemId=456','https://thumbnail.coupangcdn.com/product.webp'].map(canonical_url=>({id:crypto.randomUUID(),canonical_url,snapshot:null}));
+  const rpc=vi.fn(async(name:string,args:any)=>{if(name==='commit_search_step')committed.push(args.p_payload);});
+  const fixtureDb={one:async()=>active,rows:async()=>candidates,rpc} as any;
+  const adapter=vi.spyOn(generic,'extractCandidate').mockRejectedValue(new Error('UNEXPECTED_GENERIC_FALLBACK'));
+  const network=vi.spyOn(SafeFetcher.prototype,'get').mockRejectedValue(new Error('UNEXPECTED_NETWORK'));
+  await processJob(fixtureDb,{id:1,search_id:active.id,stage:'EXTRACTING',attempt:1,lease_token:crypto.randomUUID(),lease_expires_at:new Date(Date.now()+20000).toISOString(),checkpoint:{cursor:0}});
+  expect(adapter).not.toHaveBeenCalled();expect(network).not.toHaveBeenCalled();expect(rpc.mock.calls.some(([name])=>name==='claim_source')).toBe(false);
+  expect(committed).toHaveLength(1);expect(committed[0].records).toEqual([]);
+  expect(committed[0].candidateUpdates).toEqual(candidates.map(c=>({id:c.id,metadataStatus:'FAILED',rejectReasons:['SOURCE_POLICY_BLOCKED']})));
+  expect(committed[0].nextJobs[0]).toMatchObject({stage:'COMPARING'});
+ });
 });
 describe('sequential paid discovery checkpoints (mocked provider, no LIVE call)',()=>{
  afterEach(()=>vi.restoreAllMocks());

@@ -44,6 +44,33 @@ jobs:
         run: npm run typecheck --workspace @ssandevisthan/api
       - if: steps.allowed.outputs.deploy == 'true'
         run: node deploy/neon/build.mjs
+      - name: Seal the exact API, worker and sweep release
+        if: steps.allowed.outputs.deploy == 'true'
+        run: |
+          node deploy/neon/release.mjs create
+          node deploy/neon/release.mjs verify
+        env:
+          NEON_BACKEND_ENV_JSON: ${{ secrets.NEON_BACKEND_ENV_JSON }}
+      - name: Exercise isolated recovery and rollback before touching production
+        if: steps.allowed.outputs.deploy == 'true'
+        run: node deploy/neon/recovery-drill.mjs
+      - name: Preserve the versioned backend rollback artifact
+        if: steps.allowed.outputs.deploy == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: backend-${{ env.EXPECTED_SHA }}
+          path: .cache/neon-bundle
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain the isolated recovery evidence
+        if: steps.allowed.outputs.deploy == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: backend-recovery-${{ env.EXPECTED_SHA }}
+          path: .cache/recovery-drill-latest.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Recheck current main before changing the backend
         if: steps.allowed.outputs.deploy == 'true'
         id: current
