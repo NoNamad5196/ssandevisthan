@@ -1,5 +1,5 @@
 export const SEARCH_VERSIONS = Object.freeze({
-  pipelineVersion: 'similar-search-v3', visionPromptVersion: 'vision-attributes-v3',
+  pipelineVersion: 'similar-search-v3-2', visionPromptVersion: 'vision-attributes-v3',
   queryExpanderVersion: 'query-v3', attributeTaxonomyVersion: 'attribute-taxonomy-v3-bootstrap-1',
   compatibilityMatrixVersion: 'attribute-compatibility-v3-bootstrap-1',
   rankerVersion: 'ranker-v3-bootstrap-1', gateVersion: 'gate-v3-bootstrap-1',

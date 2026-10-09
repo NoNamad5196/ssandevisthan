@@ -4,13 +4,14 @@ import {configureSafeFetcher} from '../../../supabase/shared/safe-fetch.ts';
 import {handleApi} from '../../../supabase/functions/api/index.ts';
 import {handleWorker} from '../../../supabase/functions/worker/index.ts';
 import {handleSweep} from '../../../supabase/functions/sweep/index.ts';
-import {NeonDatabase,pool} from './database.ts';
+import {NeonDatabase,pool,s3,bucket} from './database.ts';
 import {authRoute,verifyOwner} from './auth.ts';
 import {normalizeImage,validateImage} from './images.ts';
 import {NodePinnedTransport,resolver} from './transport.ts';
 import {waitUntil} from '@neon/functions';
 import {diagnostics} from './diagnostics.ts';
 import {maintenancePrelude,maintenanceCompleted,sweepOrphans} from './maintenance.ts';
+import {sweepLedgerBackups} from '../../../deploy/neon/ledger-storage.mjs';
 
 const database=new NeonDatabase();
 configureRuntime({database,owner:verifyOwner,env:name=>process.env[name],waitUntil,async wakeWorker(){
@@ -25,6 +26,7 @@ async function schedule(req:Request):Promise<Response>{
   // Neon strips client X-Neon-* headers (official scheduled-trigger contract).
   // Also require an independent secret path and a transactional minute dedupe.
   if(!req.headers.get('x-neon-trigger-invocation-id')||marker.length<32||new URL(req.url).pathname!==`/internal/schedule/${marker}`||req.method!=='POST')return new Response(null,{status:404});
+  await sweepLedgerBackups(s3,bucket,{audit});
   const activity=await maintenancePrelude();const orphansRemoved=await sweepOrphans(activity.active);
   if(!activity.active)return Response.json({ok:true,idle:true,orphansRemoved});
   const admitted=await pool.query(`INSERT INTO public.schedule_ticks(minute) VALUES(date_trunc('minute',now())) ON CONFLICT DO NOTHING RETURNING minute`);

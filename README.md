@@ -71,3 +71,5 @@ OpenAI 외 유료 인프라는 활성화하지 않습니다. 전체 파일럿의
 품질 평가는 `node scripts/evaluate-quality.mjs`로 실행합니다. 입력이 없으면 `NOT_MEASURED`와 출시 차단을 보고하며 종료 코드 1을 반환합니다. 평가 데이터 형식과 사람 검토·holdout 절차는 `packages/quality/README.md`, 배포물 보존과 복구 절차는 `deploy/neon/RECOVERY.md`에 있습니다. 합성 라벨이나 재생 테스트를 실제 사람 평가·LIVE 검색으로 승격하지 않습니다.
 
 운영 집계는 서버 자격 증명을 환경변수 또는 Git에서 제외한 설정으로 준비한 뒤 `node deploy/neon/inspect.mjs`로 확인합니다. 이 명령은 읽기 전용 트랜잭션을 사용하고 사용자 사진·프롬프트·토큰을 출력하지 않습니다. 배포·마이그레이션·스케줄러 절차는 `deploy/neon/README.md`를 따릅니다.
+
+최소 운영 백업은 `node deploy/neon/backup.mjs`의 로컬 dry-run으로 확인합니다. 실제 저장은 별도 `--apply`와 배포된 만료 삭제 검증을 요구하며, 비용 합계·미정산 예약금만 비공개 저장소에 최대 1시간 보관합니다. 사용자 검색·사진·세션은 백업하지 않습니다. 복구 절차와 공동 저장소 장애의 한계는 `deploy/neon/RECOVERY.md`에 있습니다.

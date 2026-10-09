@@ -17,8 +17,10 @@ describe('unverified Coupang source cannot enter generic extraction',()=>{
  it('retains rejected discoveries and schedules the next stage without adapter or network calls',async()=>{
   const active={...run,status:'RUNNING',deadline_at:new Date(Date.now()+90000).toISOString()},committed:any[]=[];
   const candidates=['https://www.coupang.com/vp/products/123?itemId=456','https://thumbnail.coupangcdn.com/product.webp'].map(canonical_url=>({id:crypto.randomUUID(),canonical_url,snapshot:null}));
+  const queryId=crypto.randomUUID();
+  const discoveries=candidates.map((c,i)=>({search_id:active.id,candidate_id:c.id,field_path:'/discovery',source_url:c.canonical_url,source_kind:'SEARCH_RESULT',confidence:'VERIFIED',value_json:{rank:i+1,queryId}}));
   const rpc=vi.fn(async(name:string,args:any)=>{if(name==='commit_search_step')committed.push(args.p_payload);});
-  const fixtureDb={one:async()=>active,rows:async()=>candidates,rpc} as any;
+  const fixtureDb={one:async()=>active,rows:async(table:string)=>table==='search_candidates'?candidates:table==='field_evidence'?discoveries:table==='search_queries'?[{id:queryId,ordinal:1}]:[],rpc} as any;
   const adapter=vi.spyOn(generic,'extractCandidate').mockRejectedValue(new Error('UNEXPECTED_GENERIC_FALLBACK'));
   const network=vi.spyOn(SafeFetcher.prototype,'get').mockRejectedValue(new Error('UNEXPECTED_NETWORK'));
   await processJob(fixtureDb,{id:1,search_id:active.id,stage:'EXTRACTING',attempt:1,lease_token:crypto.randomUUID(),lease_expires_at:new Date(Date.now()+20000).toISOString(),checkpoint:{cursor:0}});

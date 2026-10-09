@@ -1,0 +1,1 @@
+export function validateLedgerDestination(input:{connectionString:string;settings:any;apiKey:string;bucket:string;s3Endpoint:string},fetcher?:typeof fetch):Promise<{project:string;branch:string;slug:string;database:string;endpointId:string;origin:string}>;

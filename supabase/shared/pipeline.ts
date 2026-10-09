@@ -1,7 +1,7 @@
 import { isTerminalStatus,RunFailureCodeSchema } from '@ssandevisthan/contracts';
 import {
   compareAttributesAndVisual,rankImageCandidates,rankDealCandidates,projectSnapshot,deduplicateDiscovery,selectDiverseCandidates,
-  deriveDealRelevanceInput,type Candidate,type DealCandidate,type DiscoveryCandidate,
+  deriveDealRelevanceInput,checkSourceEligibility,hasVerifiedFieldEvidence,type Candidate,type DealCandidate,type DiscoveryCandidate,
 } from '@ssandevisthan/search-core';
 import {AppError,Database,audit,sha256,type Row} from './runtime.ts';
 import {OpenAIProvider} from './providers/openai.ts';
@@ -17,13 +17,59 @@ function sourceFetcher(db:Database,job:Row){return new SafeFetcher(undefined,und
   return async()=>{await db.patch('source_leases',`host=eq.${encodeURIComponent(host)}&token=eq.${token}`,{expires_at:new Date(0).toISOString()});};
 }});}
 function imageDataUrl(bytes:Uint8Array){let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));return`data:image/webp;base64,${btoa(binary)}`;}
+async function discoveryCandidates(db:Database,run:Row,rows:Row[]):Promise<(Row & DiscoveryCandidate)[]>{
+  if(!rows.length)return[];
+  // created_at is identical for a transaction and UUIDs are random. Neither is
+  // discovery order. Reuse the immutable tool rank/query evidence already stored
+  // by commit_search_step; old checkpoints therefore need no schema migration.
+  const [evidence,queries]=await Promise.all([
+    db.rows('field_evidence',`search_id=eq.${run.id}&field_path=eq.%2Fdiscovery`),
+    db.rows('search_queries',`search_id=eq.${run.id}&order=ordinal.asc`),
+  ]);
+  const ordinals=new Map(queries.map(q=>[q.id,q.ordinal]));
+  return rows.map(c=>{
+    const sources=evidence.filter(e=>e.candidate_id===c.id&&e.search_id===run.id&&e.source_url===c.canonical_url&&e.source_kind==='SEARCH_RESULT'&&e.confidence==='VERIFIED')
+      .map(e=>({rank:e.value_json?.rank,ordinal:ordinals.get(e.value_json?.queryId)}))
+      .filter(e=>Number.isSafeInteger(e.rank)&&e.rank>=1&&Number.isSafeInteger(e.ordinal)&&e.ordinal>=1&&e.ordinal<=8)
+      .sort((a,b)=>a.rank-b.rank||a.ordinal-b.ordinal);
+    if(!sources.length)throw new AppError('DISCOVERY_EVIDENCE_MISSING',500);
+    return{...c,url:c.canonical_url,queryOrdinal:sources[0].ordinal,discoveryRank:sources[0].rank,
+      merchant:new URL(c.canonical_url).hostname,categorySuitable:null,knownAttributeCount:0};
+  });
+}
+function sourceEvidencePreflight(row:Row,searchId:string,mode='IMAGE_SIMILAR'):string[]{
+  const c=row.snapshot as Candidate & {sourceVariantKey?:string};
+  // Commerce eligibility is shared with DEAL_TEXT. Clothing is still UNKNOWN
+  // until vision observes it; never manufacture true merely to enter comparison.
+  const reasons:string[]=[...checkSourceEligibility(c.eligibility,'DEAL_TEXT',c.imageSource).reasons];
+  if(mode==='IMAGE_SIMILAR'&&c.eligibility.isClothing===false)reasons.push('NOT_CLOTHING');
+  if(c.variant.availability!=='IN_STOCK')reasons.push('OUT_OF_STOCK');
+  const evidence=c.fieldEvidence.filter(e=>e.searchId===searchId&&e.candidateId===row.id);
+  const verified=(path:string,value:unknown,at?:string|null)=>hasVerifiedFieldEvidence(evidence,c,path,value,at);
+  if(!verified('/imageUrl',c.imageUrl,c.imageObservedAt))reasons.push('IMAGE_UNVERIFIED');
+  if(!c.sourceVariantKey||!verified('/variant',c.sourceVariantKey))reasons.push('VARIANT_MISMATCH');
+  if(!verified('/stockStatus','IN_STOCK',c.stockObservedAt))reasons.push('ELIGIBILITY_UNKNOWN');
+  for(const [path,value] of [['/condition','NEW'],['/domesticShipping','CONFIRMED'],['/domesticSales',true],['/overseasDirect',false],['/rental',false]] as const){
+    if(!verified(path,value))reasons.push('ELIGIBILITY_UNKNOWN');
+  }
+  // Price is deliberately not a precondition: a visually qualified candidate
+  // with unknown price may still become a separately labelled reference.
+  return [...new Set(reasons)];
+}
 function safeFailure(code:string){
   const parsed=RunFailureCodeSchema.safeParse(code);
   return{code:parsed.success?parsed.data:'PROVIDER_UNAVAILABLE',message:code==='AMBIGUOUS_TARGET'?'옷 한 벌이 잘 보이는 사진을 선택해 주세요.':code==='UNSUPPORTED_CATEGORY'?'의류 사진으로 다시 검색해 주세요.':'검색을 완료하지 못했어요. 잠시 후 다시 시도해 주세요.',retryable:!['AMBIGUOUS_TARGET','UNSUPPORTED_CATEGORY'].includes(code)};
 }
 export async function rankPayload(db:Database,run:Row,forcedPartial=false):Promise<Row>{
   const rows=await db.rows('search_candidates',`search_id=eq.${run.id}&snapshot=not.is.null&order=created_at.asc,id.asc`);
-  const candidates=rows.map(r=>r.snapshot).filter(Boolean);
+  // Deadline/error recovery may jump directly to ranking. Repeat the evidence
+  // boundary here so an older comparison cannot bypass a rejected source fact.
+  const sourceRejected:Row[]=[];
+  const candidates=rows.filter(r=>{
+    const reasons=sourceEvidencePreflight(r,run.id,run.mode);
+    if(reasons.length)sourceRejected.push({id:r.id,gateStatus:'REJECT',rejectReasons:reasons});
+    return !reasons.length;
+  }).map(r=>r.snapshot);
   const snapshot=run.mode==='IMAGE_SIMILAR'?rankImageCandidates(candidates as Candidate[],Date.now()):rankDealCandidates(candidates as DealCandidate[],Date.now());
   const projection=projectSnapshot(snapshot,'RECOMMENDED',run.result_limit);
   const failed=run.warning_codes.some((w:Row)=>['PROVIDER_FAILED','EXTRACTION_FAILED','COMPARISON_FAILED','DISCOVERY_FAILED','BUDGET_LIMITED'].includes(w.code));
@@ -33,7 +79,7 @@ export async function rankPayload(db:Database,run:Row,forcedPartial=false):Promi
   return{terminal,eligible:snapshot.eligible,references:snapshot.references,sortOrders:snapshot.sortOrders,results:projection.results,
     failure:terminal==='EXPIRED'?safeFailure('DEADLINE_EXCEEDED'):terminal==='FAILED'?safeFailure('PROVIDER_UNAVAILABLE'):null,
     warnings:!snapshot.eligible.length&&!failed&&!expired?[warning('NO_CANDIDATE_PASSED','충분히 비슷하고 가격을 확인할 수 있는 상품을 찾지 못했어요.')]:[],
-    candidateUpdates:snapshot.diagnostics.map(d=>({id:rows.find(r=>r.snapshot?.offerId===d.offerId)?.id,gateStatus:'REJECT',rejectReasons:d.reasons})).filter(d=>d.id)};
+    candidateUpdates:[...sourceRejected,...snapshot.diagnostics.map(d=>({id:rows.find(r=>r.snapshot?.offerId===d.offerId)?.id,gateStatus:'REJECT',rejectReasons:d.reasons})).filter(d=>d.id)]};
 }
 async function signedInput(db:Database,run:Row,deadline:number):Promise<string>{
   const u=await db.one('upload_sessions',`id=eq.${run.upload_id}&owner_id=eq.${run.owner_id}&deleted_at=is.null`);
@@ -100,7 +146,7 @@ async function stage(db:Database,provider:OpenAIProvider,run:Row,job:Row,deadlin
     }
     case 'EXTRACTING':{
       const all=await db.rows('search_candidates',`search_id=eq.${run.id}&order=created_at.asc,id.asc`);
-      const pool=selectDiverseCandidates<Row & DiscoveryCandidate>(all.map((c,i)=>({...c,url:c.canonical_url,queryOrdinal:1,discoveryRank:i+1,merchant:new URL(c.canonical_url).hostname,categorySuitable:null,knownAttributeCount:0})),30);
+      const pool=selectDiverseCandidates(await discoveryCandidates(db,run,all),30);
       const cursor=Number(cp.cursor??0);const batch=pool.slice(cursor,cursor+2);const records:Row[]=[],updates:Row[]=[],warnings:Row[]=[];
       // Every page, redirect, and CDN image request obtains its own host lease.
       const fetcher=sourceFetcher(db,job);
@@ -124,9 +170,11 @@ async function stage(db:Database,provider:OpenAIProvider,run:Row,job:Row,deadlin
     }
     case 'COMPARING':{
       const all=await db.rows('search_candidates',`search_id=eq.${run.id}&snapshot=not.is.null&order=created_at.asc,id.asc`);
-      const selected=selectDiverseCandidates<Row & DiscoveryCandidate>(all.map((c,i)=>({...c,url:c.canonical_url,queryOrdinal:1,discoveryRank:i+1,merchant:new URL(c.canonical_url).hostname,categorySuitable:null,knownAttributeCount:0})),20);
+      const eligible:Row[]=[],ineligible:Row[]=[];
+      for(const c of all){const reasons=sourceEvidencePreflight(c,run.id);if(reasons.length)ineligible.push({id:c.id,gateStatus:'REJECT',rejectReasons:reasons});else eligible.push(c);}
+      const selected=selectDiverseCandidates(await discoveryCandidates(db,run,eligible),20);
       const cursor=Number(cp.cursor??0),batch=selected.slice(cursor,cursor+5);
-      if(!batch.length)return{nextJobs:[next('rank','RANKING')]};
+      if(!batch.length)return{candidateUpdates:ineligible,nextJobs:[next('rank','RANKING')]};
       const prepared:Row[]=[],failed:Row[]=[],fetcher=sourceFetcher(db,job);
       for(const c of batch){try{
         const image=await fetcher.get(c.snapshot.imageUrl,'image',deadline);
@@ -143,7 +191,7 @@ async function stage(db:Database,provider:OpenAIProvider,run:Row,job:Row,deadlin
         return{id:old.id,snapshot:{...c,comparison:metrics,eligibility:{...c.eligibility,isClothing:compared.attributes.category.state==='OBSERVED'?true:null},matchedAttributes:compared.matchedAttributes,differentAttributes:compared.differentAttributes,unknownAttributes:compared.unknownAttributes}};
       });
       const nextCursor=cursor+batch.length;const more=nextCursor<selected.length&&Date.parse(run.deadline_at)-Date.now()>20000;
-      return{candidateUpdates:[...updates,...failed],progress:{comparedCandidates:all.filter(c=>c.snapshot?.comparison).length+updates.length},warnings:[...(failed.length?[warning('COMPARISON_FAILED')]:[]),...(nextCursor<selected.length&&!more?[warning('DEADLINE_COVERAGE')]:[])],nextJobs:[more?next(`compare:${nextCursor}`,'COMPARING',{cursor:nextCursor}):next('rank','RANKING')]};
+      return{candidateUpdates:[...updates,...failed,...ineligible],progress:{comparedCandidates:all.filter(c=>c.snapshot?.comparison).length+updates.length},warnings:[...(failed.length?[warning('COMPARISON_FAILED')]:[]),...(nextCursor<selected.length&&!more?[warning('DEADLINE_COVERAGE')]:[])],nextJobs:[more?next(`compare:${nextCursor}`,'COMPARING',{cursor:nextCursor}):next('rank','RANKING')]};
     }
     case 'RANKING':return rankPayload(db,run);
     default:throw new AppError('INTERNAL_ERROR',500);

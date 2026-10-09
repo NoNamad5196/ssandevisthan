@@ -10,17 +10,28 @@ function PrivacyNotice(){const dialog=useRef<HTMLDialogElement>(null);return <><
 
 function UploadPanel(){
  const input=useRef<HTMLInputElement>(null);const nav=useNavigate();
- const [file,setFile]=useState<File>();const [preview,setPreview]=useState('');const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [drag,setDrag]=useState(false);
+ const [file,setFile]=useState<File>();const [preview,setPreview]=useState('');const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [removing,setRemoving]=useState(false);const [drag,setDrag]=useState(false);
  const selectionEpoch=useRef(0);
  const operation=useRef<{key:string;uploadId?:string;stored?:boolean;ready?:boolean}>({key:crypto.randomUUID()});
  useEffect(()=>{if(!file){setPreview('');return;}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url)},[file]);
+ async function commitSelection(next:File|undefined,epoch:number){
+  const uploadId=operation.current.uploadId;
+  if(uploadId){setBusy(true);setRemoving(true);}
+  try{
+   // DELETE also returns 204 for an absent/expired unused upload. A 404/410
+   // response is not that confirmation; preserve the ID so deletion can retry.
+   if(uploadId)await request(`/uploads/${uploadId}`,{method:'DELETE'});
+   if(epoch!==selectionEpoch.current)return;
+   operation.current={key:crypto.randomUUID()};setFile(next);setError('');
+  }catch{if(epoch===selectionEpoch.current)setError('사진 삭제를 확인하지 못했어요. 다시 시도해 주세요.');}
+  finally{if(uploadId){setBusy(false);setRemoving(false);}if(input.current)input.current.value='';}
+ }
  async function choose(next?:File){
   if(!next||busy)return;const epoch=++selectionEpoch.current;setError('');
   if(!['image/jpeg','image/png','image/webp'].includes(next.type)){setError('JPG, PNG, WEBP 사진 한 장을 선택해 주세요.');return;}
   if(!next.size||next.size>10_000_000){setError('사진은 최대 10MB까지 올릴 수 있어요.');return;}
   try{const decoded=await createImageBitmap(next);const pixels=decoded.width*decoded.height;decoded.close();if(epoch!==selectionEpoch.current)return;if(pixels>24_000_000){setError('사진 해상도는 최대 2,400만 화소까지 지원해요.');return;}}catch{if(epoch===selectionEpoch.current)setError('사진을 읽을 수 없어요. 다른 사진을 선택해 주세요.');return;}
-  if(operation.current.uploadId)void request(`/uploads/${operation.current.uploadId}`,{method:'DELETE'}).catch(()=>{});
-  operation.current={key:crypto.randomUUID()};setFile(next);
+  await commitSelection(next,epoch);
  }
  async function start(){
   if(!file||busy)return;++selectionEpoch.current;setBusy(true);setError('');
@@ -33,11 +44,11 @@ function UploadPanel(){
    nav(`/search/${run.searchId}`);
   }catch(e){setError(errorMessage(e));}finally{setBusy(false);}
  }
- function clear(){++selectionEpoch.current;if(operation.current.uploadId)void request(`/uploads/${operation.current.uploadId}`,{method:'DELETE'}).catch(()=>{});operation.current={key:crypto.randomUUID()};setFile(undefined);setError('');if(input.current)input.current.value='';}
+ async function clear(){if(busy)return;const epoch=++selectionEpoch.current;setError('');await commitSelection(undefined,epoch);}
  return <div className={`upload-wrap ${drag?'dragging':''}`} onDragOver={e=>{e.preventDefault();if(!busy)setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);if(!busy){if(e.dataTransfer.files.length!==1)setError('의류 사진 한 장만 선택해 주세요.');else void choose(e.dataTransfer.files[0]);}}}>
   <div className="upload-panel">
    <input ref={input} id="clothes-photo" className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e=>void choose(e.target.files?.[0])} aria-label="의류 사진 업로드" aria-describedby="upload-help upload-error" />
-   {file?<>{preview&&<img className="upload-preview" src={preview} alt="선택한 의류 사진 미리보기"/>}<h2>이 옷과 비슷한 상품을 찾아볼까요?</h2><p className="upload-description">검색할 때 사진을 OpenAI에 전달해요.</p><div className="file-actions"><button disabled={busy} onClick={()=>input.current?.click()}><RefreshCw/> 사진 교체</button><button disabled={busy} onClick={clear}><X/> 삭제</button><PrivacyNotice/></div><button className="upload-cta" disabled={busy} onClick={()=>void start()}>{busy?<LoaderCircle className="spin"/>:<Search/>}<span>{busy?'사진을 준비하고 있어요.':'비슷한 옷 찾기'}</span><ArrowRight/></button></>:
+   {file?<>{preview&&<img className="upload-preview" src={preview} alt="선택한 의류 사진 미리보기"/>}<h2>이 옷과 비슷한 상품을 찾아볼까요?</h2><p className="upload-description">검색할 때 사진을 OpenAI에 전달해요.</p><div className="file-actions"><button disabled={busy} onClick={()=>input.current?.click()}><RefreshCw/> 사진 교체</button><button disabled={busy} onClick={()=>void clear()}><X/> 삭제</button><PrivacyNotice/></div><button className="upload-cta" disabled={busy} onClick={()=>void start()}>{busy?<LoaderCircle className="spin"/>:<Search/>}<span>{removing?'이전 사진을 삭제하고 있어요.':busy?'사진을 준비하고 있어요.':'비슷한 옷 찾기'}</span><ArrowRight/></button></>:
    <><img className="upload-icon" src="/artwork/image-add.png" alt=""/><h2>찾고 싶은 옷 사진을 올려주세요</h2><p className="upload-description">옷 한 장만 올리면, 같은 스타일의 더 저렴한 상품을 찾아드려요.</p><button className="upload-cta" onClick={()=>input.current?.click()}><Upload/><span>사진 올리기</span><ArrowRight/></button></>}
    <p id="upload-help" className="upload-help">JPG, PNG, WEBP (최대 10MB)</p><p id="upload-error" className="upload-error" role="alert">{error}</p>
   </div>

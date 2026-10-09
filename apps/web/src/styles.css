@@ -18,7 +18,7 @@
 @media(min-width:768px){
  .header{background:#090c0f url('/artwork/header-surface.png') 0 0/1586px 55px no-repeat}
  .header img{transform:translateY(-1px)}
- .header nav{gap:34px;font-size:19px;font-weight:500}
+ .header nav{gap:34px;font-size:18px;font-weight:500}
  .header nav .nav-active{font-size:20px;font-weight:750}
  .deals{background:#090e12 url('/artwork/deal-surface.png') 0 0/1586px 171px no-repeat}
  .hero{background-color:#fbff20;background-image:url('/artwork/hero-surface.png'),url('/artwork/upload-copy-fill.png'),url('/artwork/upload-control-fill.png'),url('/artwork/upload-help-fill.png');background-position:0 0,202px 459px,182px 542px,289px 613px;background-size:1586px 766px,427px 77px,450px 70px,250px 25px;background-repeat:no-repeat}
@@ -31,11 +31,11 @@
  .subhead,.steps p,.deal-copy h2,.deal-copy em,.deal-copy>p,.deal-copy .eyebrow,.deal-copy .eyebrow>*{color:transparent}
  .upload-wrap{padding:0;background:transparent;clip-path:none}
  .upload-panel{background:transparent;clip-path:none}
- .upload-panel h2{top:113px}
- .upload-description{top:157px}
- .upload-cta{left:125px;top:194px;font-size:29px;clip-path:polygon(21px 0,calc(100% - 20px) 0,100% 22px,100% 45px,calc(100% - 19px) 100%,20px 100%,0 44px,0 22px)}
+ .upload-panel h2{top:112px}
+ .upload-description{top:154px;font-size:16.5px}
+ .upload-cta{left:125px;top:194px;font-size:28px;clip-path:polygon(21px 0,calc(100% - 20px) 0,100% 22px,100% 45px,calc(100% - 19px) 100%,20px 100%,0 44px,0 22px)}
  .upload-icon{top:34px;left:305px}
- .upload-help{top:268px}
+ .upload-help{top:267px;font-size:13.5px}
  .steps>div:before{content:'';display:block;width:53px;height:54px;flex-shrink:0;visibility:hidden}
  .steps>div+div{border-left-color:transparent}
  .steps>div:nth-child(1):before{background-image:url('/artwork/step-shirt.png')}

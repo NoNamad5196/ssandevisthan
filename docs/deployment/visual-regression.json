@@ -9,12 +9,12 @@
   "note": "Difference metrics are diagnostic, not a release acceptance threshold. No regions are masked. Visual reviewer approval is still required.",
   "metrics": {
     "full": {
-      "meanAbsoluteChannelDifference": 1.625,
-      "pixelsOver24DifferencePercent": 1.713
+      "meanAbsoluteChannelDifference": 1.501,
+      "pixelsOver24DifferencePercent": 1.63
     },
     "header": {
-      "meanAbsoluteChannelDifference": 3.207,
-      "pixelsOver24DifferencePercent": 2.966
+      "meanAbsoluteChannelDifference": 2.525,
+      "pixelsOver24DifferencePercent": 2.563
     },
     "logo": {
       "meanAbsoluteChannelDifference": 0,
@@ -25,8 +25,8 @@
       "pixelsOver24DifferencePercent": 0
     },
     "upload": {
-      "meanAbsoluteChannelDifference": 5.967,
-      "pixelsOver24DifferencePercent": 6.017
+      "meanAbsoluteChannelDifference": 5.345,
+      "pixelsOver24DifferencePercent": 5.58
     },
     "headline": {
       "meanAbsoluteChannelDifference": 0,

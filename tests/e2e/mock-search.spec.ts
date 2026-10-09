@@ -58,9 +58,9 @@ test.describe('MOCK API browser integration @mock', () => {
     await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(envelope), headers: { 'Access-Control-Allow-Origin': '*' } });
   }
   type Seen = { path: string; method: string; authorization?: string; idempotency?: string; body: unknown };
-  async function setup(page: Page, options: { statuses?: SearchStatus[]; terminal?: TerminalStatus; failFirstCreate?: boolean; refreshOtherOwner?: boolean; deal?: boolean; malformed?: boolean } = {}) {
+  async function setup(page: Page, options: { statuses?: SearchStatus[]; terminal?: TerminalStatus; failFirstCreate?: boolean; refreshOtherOwner?: boolean; deal?: boolean; malformed?: boolean; deleteUpload?: (route:Route,attempt:number)=>Promise<void> } = {}) {
     const seen: Seen[] = [], unexpected: string[] = [];
-    let polls = 0, creates = 0, canceled = false;
+    let polls = 0, creates = 0, deletes = 0, canceled = false;
     const statuses = options.statuses ?? [options.terminal ?? 'COMPLETED'];
     const terminal = options.terminal ?? 'COMPLETED';
     const picture = await readFile(resolve('apps/web/public/artwork/hero-collage.png'));
@@ -81,6 +81,10 @@ test.describe('MOCK API browser integration @mock', () => {
       if (path === '/uploads' && request.method() === 'POST') return reply(route, { uploadId, status: 'PENDING', contentUrl: `${API_BASE}/uploads/${uploadId}/content`, expiresAt: new Date(Date.now() + 3600_000).toISOString(), maxBytes: 10_000_000, maxPixels: 24_000_000 }, UploadCreatedDataSchema, 201);
       if (path === `/uploads/${uploadId}/content`) return reply(route, { uploadId, status: 'STORED', mimeType: 'image/webp', width: 826, height: 766, normalizedBytes: 100_000, expiresAt: new Date(Date.now() + 3600_000).toISOString() }, UploadStoredDataSchema);
       if (path === `/uploads/${uploadId}/finalize`) return reply(route, { uploadId, status: 'READY', mimeType: 'image/webp', width: 826, height: 766, expiresAt: new Date(Date.now() + 3600_000).toISOString() }, UploadReadyDataSchema);
+      if (path === `/uploads/${uploadId}` && request.method() === 'DELETE') {
+        deletes++;if(options.deleteUpload)return options.deleteUpload(route,deletes);
+        return route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'*'}});
+      }
       if (path === '/searches' || path === '/deals') {
         creates++;
         if (options.failFirstCreate && creates === 1) return fail(route);
@@ -123,6 +127,58 @@ test.describe('MOCK API browser integration @mock', () => {
     expect(creates[1].idempotency).toBe(creates[0].idempotency);
     expect(creates[1].body).toEqual({ schemaVersion: 3, uploadId, resultLimit: 10 });
     await expect(page.getByText('MOCK 유사도 탈락 상품', { exact: true })).toHaveCount(0);
+    expect(mock.unexpected).toEqual([]);
+  });
+
+  for(const action of ['delete','replace'] as const)test(`a failed ${action} preserves the stored photo and retries the same upload ID`,async({page})=>{
+    await page.setViewportSize({width:390,height:844});
+    let releaseDelete!:()=>void;
+    const pending=new Promise<void>(resolve=>{releaseDelete=resolve;});
+    const mock=await setup(page,{failFirstCreate:true,deleteUpload:async(route,attempt)=>{
+      if(attempt===1){await pending;return fail(route);}
+      await route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'*'}});
+    }});
+    await page.goto('/');const input=page.locator('#clothes-photo');
+    await input.setInputFiles(resolve('apps/web/public/artwork/hero-collage.png'));
+    await page.getByRole('button',{name:'비슷한 옷 찾기',exact:true}).click();
+    await expect(page.locator('#upload-error')).toContainText('MOCK: 잠시 후 다시');
+    const preview=page.getByRole('img',{name:'선택한 의류 사진 미리보기'}),originalUrl=(await preview.getAttribute('src'))!;
+    const replacement={name:'replacement.png',mimeType:'image/png',buffer:await readFile(resolve('apps/web/public/artwork/deal-collage.png'))};
+    async function act(){if(action==='delete')await page.getByRole('button',{name:'삭제',exact:true}).click();else await input.setInputFiles(replacement);}
+    await act();await expect(page.getByRole('button',{name:'이전 사진을 삭제하고 있어요.',exact:true})).toBeDisabled();
+    await expect(preview).toHaveAttribute('src',originalUrl);
+    await expect(page.getByRole('button',{name:'사진 교체',exact:true})).toBeDisabled();
+    await expect(page.getByRole('button',{name:'삭제',exact:true})).toBeDisabled();
+    releaseDelete();await expect(page.locator('#upload-error')).toHaveText('사진 삭제를 확인하지 못했어요. 다시 시도해 주세요.');
+    await expect(preview).toHaveAttribute('src',originalUrl);
+    await expect(page.getByRole('button',{name:'삭제',exact:true})).toBeEnabled();
+    const errorBox=await page.locator('#upload-error').boundingBox(),helpBox=await page.locator('#upload-help').boundingBox(),buttonBox=await page.locator('.upload-cta').boundingBox();
+    expect(errorBox!.y).toBeGreaterThanOrEqual(helpBox!.y+helpBox!.height);
+    expect(errorBox!.y).toBeGreaterThanOrEqual(buttonBox!.y+buttonBox!.height);
+    await capture(page,`upload-${action}-failed-mobile`);
+    await act();
+    if(action==='delete')await expect(page.getByRole('button',{name:'사진 올리기',exact:true})).toBeVisible();
+    else{await expect(preview).not.toHaveAttribute('src',originalUrl);await expect(page.getByRole('button',{name:'비슷한 옷 찾기',exact:true})).toBeEnabled();}
+    expect(mock.seen.filter(r=>r.method==='DELETE').map(r=>r.path)).toEqual([`/uploads/${uploadId}`,`/uploads/${uploadId}`]);
+    expect(mock.seen.filter(r=>r.path==='/uploads')).toHaveLength(1);
+    await expect(page.locator('#upload-error')).toHaveText('');expect(mock.unexpected).toEqual([]);
+  });
+
+  for(const [status,code] of [[404,'NOT_FOUND'],[410,'UPLOAD_EXPIRED']] as const)test(`unexpected DELETE ${status} is not promoted to the idempotent 204 acknowledgment`,async({page})=>{
+    const mock=await setup(page,{failFirstCreate:true,deleteUpload:async(route,attempt)=>{
+      if(attempt>1)return route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'*'}});
+      const envelope=ApiFailureEnvelopeSchema.parse({ok:false,error:{code,message:'MOCK: 삭제 확인 없음',retryable:false},meta:meta()});
+      await route.fulfill({status,contentType:'application/json',body:JSON.stringify(envelope),headers:{'Access-Control-Allow-Origin':'*'}});
+    }});
+    await page.goto('/');await page.locator('#clothes-photo').setInputFiles(resolve('apps/web/public/artwork/hero-collage.png'));
+    await page.getByRole('button',{name:'비슷한 옷 찾기',exact:true}).click();
+    await expect(page.locator('#upload-error')).toContainText('MOCK: 잠시 후 다시');
+    await page.getByRole('button',{name:'삭제',exact:true}).click();
+    await expect(page.locator('#upload-error')).toContainText('사진 삭제를 확인하지 못했어요.');
+    await expect(page.getByRole('img',{name:'선택한 의류 사진 미리보기'})).toBeVisible();
+    await page.getByRole('button',{name:'삭제',exact:true}).click();
+    await expect(page.getByRole('button',{name:'사진 올리기',exact:true})).toBeVisible();
+    expect(mock.seen.filter(r=>r.method==='DELETE').map(r=>r.path)).toEqual([`/uploads/${uploadId}`,`/uploads/${uploadId}`]);
     expect(mock.unexpected).toEqual([]);
   });
 
