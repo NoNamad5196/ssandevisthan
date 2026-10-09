@@ -67,6 +67,9 @@ OpenAI 외 유료 인프라는 활성화하지 않습니다. 전체 파일럿의
 - `docs/deployment/quality-not-measured.json`: 실제 평가 데이터 미제공 상태의 품질 보고서. 지표는 `null`, 출시는 차단 상태입니다.
 - `docs/deployment/public-82c6ddd.json`, `docs/deployment/backend-82c6ddd.json`: 공개 파일과 검증된 CI 산출물 일치, 프론트엔드·백엔드 배포 성공 및 유료 검색 비활성 상태.
 - `docs/deployment/recovery-cloud-rls.json`: 실제 Neon의 별도 테스트 DB에서 합성 복구와 RLS 검증, 임시 역할 롤백 및 DB 정리 증거. 실제 상품 검색·애플리케이션 롤백 증거와 구분합니다.
+- `docs/deployment/public-fa4b98d.json`: 최신 기능 변경의 자동 배포와 실제 공개 업로드·삭제, 1.630% 시각 비교 기록.
+- `docs/deployment/app-rollback-cloud.json`, `app-rollback-post-audit.json`: 새 테스트 함수의 실제 이전 코드 활성화·합성 원장 복구·자원 정리. 마지막 전체 trigger 해시 검사 실패와 후속 고정 설정 확인을 함께 보존합니다.
+- `docs/deployment/ledger-expiry-cloud.json`: 사용자 데이터 없는 합성 백업 객체의 비공개 접근 제어와 만료 전 자동 삭제 검증.
 
 품질 평가는 `node scripts/evaluate-quality.mjs`로 실행합니다. 입력이 없으면 `NOT_MEASURED`와 출시 차단을 보고하며 종료 코드 1을 반환합니다. 평가 데이터 형식과 사람 검토·holdout 절차는 `packages/quality/README.md`, 배포물 보존과 복구 절차는 `deploy/neon/RECOVERY.md`에 있습니다. 합성 라벨이나 재생 테스트를 실제 사람 평가·LIVE 검색으로 승격하지 않습니다.
 

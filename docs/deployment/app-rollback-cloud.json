@@ -1,0 +1,519 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-09T10:57:08.420Z",
+  "scriptSha256": "79c1af5e6d8e4617eeb61b101bd9e74f3a343ba9c032143837d5bf07665f1693",
+  "status": "CLEANUP_REQUIRES_ATTENTION",
+  "environment": "NEON_SHARED_BRANCH_NEW_DATABASE_BUCKET_FUNCTION",
+  "mode": "SYNTHETIC_LEDGER_RESTORE_AND_APP_ROLLBACK",
+  "project": "lucky-sun-06718695",
+  "branch": "br-polished-resonance-az03nnva",
+  "names": {
+    "database": "appdrill_bf25e75fd597ae8c6f55",
+    "bucket": "appdrill-bf25e75fd597ae8c6f55",
+    "slug": "dbf25e75fd597ae8c6f5"
+  },
+  "checks": [
+    {
+      "name": "new release differs from retained193",
+      "pass": true
+    },
+    {
+      "name": "same exact seven migrations",
+      "pass": true
+    },
+    {
+      "name": "ledger restore library matches reviewed new commit",
+      "pass": true
+    },
+    {
+      "name": "synthetic envelope has one-hour TTL and no user/search data",
+      "pass": true
+    },
+    {
+      "name": "CI run succeeds for exact fa4b98d",
+      "pass": true
+    },
+    {
+      "name": "retained artifact matches exact fa4b98d",
+      "pass": true
+    },
+    {
+      "name": "GitHub archive digest verified fa4b98d",
+      "pass": true
+    },
+    {
+      "name": "all local release bytes match retained archive fa4b98d",
+      "pass": true
+    },
+    {
+      "name": "CI run succeeds for exact 193256c",
+      "pass": true
+    },
+    {
+      "name": "retained artifact matches exact 193256c",
+      "pass": true
+    },
+    {
+      "name": "GitHub archive digest verified 193256c",
+      "pass": true
+    },
+    {
+      "name": "all local release bytes match retained archive 193256c",
+      "pass": true
+    },
+    {
+      "name": "fixed dedicated project selected",
+      "pass": true
+    },
+    {
+      "name": "all random test resource names are absent",
+      "pass": true
+    },
+    {
+      "name": "bounded Postgres storage and compute headroom",
+      "pass": true
+    },
+    {
+      "name": "known production function URL shape",
+      "pass": true
+    },
+    {
+      "name": "created exact new database",
+      "pass": true
+    },
+    {
+      "name": "created exact new private bucket",
+      "pass": true
+    },
+    {
+      "name": "SQL session exact new DB and owner",
+      "pass": true
+    },
+    {
+      "name": "new database is empty",
+      "pass": true
+    },
+    {
+      "name": "bootstrap roles already exist",
+      "pass": true
+    },
+    {
+      "name": "roles unchanged after migrations",
+      "pass": true
+    },
+    {
+      "name": "synthetic ledger restored in same fresh cloud DB",
+      "pass": true
+    },
+    {
+      "name": "ledger restore creates no users sessions searches jobs or results",
+      "pass": true
+    },
+    {
+      "name": "restored spend and aggregate orphan hold remain with paid disabled",
+      "pass": true
+    },
+    {
+      "name": "deployment archive below conservative 10 MiB fa4b98d",
+      "pass": true
+    },
+    {
+      "name": "deployment ID returned",
+      "pass": true
+    },
+    {
+      "name": "test function URL and identity bound",
+      "pass": true
+    },
+    {
+      "name": "test function URL and identity bound",
+      "pass": true
+    },
+    {
+      "name": "two real synthetic anonymous owners created",
+      "pass": true
+    },
+    {
+      "name": "synthetic image below 2 KiB",
+      "pass": true
+    },
+    {
+      "name": "create owned tiny upload",
+      "pass": true
+    },
+    {
+      "name": "cross-owner content rejected",
+      "pass": true
+    },
+    {
+      "name": "owned content normalized and uploaded",
+      "pass": true
+    },
+    {
+      "name": "NEW_RELEASE health disabled",
+      "pass": true
+    },
+    {
+      "name": "NEW_RELEASE owned upload remains READY",
+      "pass": true
+    },
+    {
+      "name": "NEW_RELEASE other owner denied",
+      "pass": true
+    },
+    {
+      "name": "NEW_RELEASE paid admission blocked",
+      "pass": true
+    },
+    {
+      "name": "NEW_RELEASE invalid worker secret denied",
+      "pass": true
+    },
+    {
+      "name": "NEW_RELEASE worker claims no job",
+      "pass": true
+    },
+    {
+      "name": "restored spend and aggregate orphan hold remain with paid disabled",
+      "pass": true
+    },
+    {
+      "name": "object belongs only to new private bucket",
+      "pass": true
+    },
+    {
+      "name": "restored spend and aggregate orphan hold remain with paid disabled",
+      "pass": true
+    },
+    {
+      "name": "test function identity unchanged before redeploy",
+      "pass": true
+    },
+    {
+      "name": "deployment archive below conservative 10 MiB 193256c",
+      "pass": true
+    },
+    {
+      "name": "deployment ID returned",
+      "pass": true
+    },
+    {
+      "name": "test function URL and identity bound",
+      "pass": true
+    },
+    {
+      "name": "test function URL and identity bound",
+      "pass": true
+    },
+    {
+      "name": "deployment activation changes version",
+      "pass": true
+    },
+    {
+      "name": "RETAINED_193_ROLLBACK health disabled",
+      "pass": true
+    },
+    {
+      "name": "RETAINED_193_ROLLBACK owned upload remains READY",
+      "pass": true
+    },
+    {
+      "name": "RETAINED_193_ROLLBACK other owner denied",
+      "pass": true
+    },
+    {
+      "name": "RETAINED_193_ROLLBACK paid admission blocked",
+      "pass": true
+    },
+    {
+      "name": "RETAINED_193_ROLLBACK invalid worker secret denied",
+      "pass": true
+    },
+    {
+      "name": "RETAINED_193_ROLLBACK worker claims no job",
+      "pass": true
+    },
+    {
+      "name": "restored spend and aggregate orphan hold remain with paid disabled",
+      "pass": true
+    },
+    {
+      "name": "pre-rollback refresh token preserves owner",
+      "pass": true
+    },
+    {
+      "name": "new access token retains old upload access",
+      "pass": true
+    },
+    {
+      "name": "upload owner state key and TTL preserved",
+      "pass": true
+    },
+    {
+      "name": "normalized object survives rollback unchanged",
+      "pass": true
+    },
+    {
+      "name": "restored spend and aggregate orphan hold remain with paid disabled",
+      "pass": true
+    },
+    {
+      "name": "ledger unchanged across rollback",
+      "pass": true
+    },
+    {
+      "name": "test DB below 50 MB",
+      "pass": true
+    },
+    {
+      "name": "shared roles unchanged",
+      "pass": true
+    },
+    {
+      "name": "all temporary resources absent",
+      "pass": true
+    }
+  ],
+  "mutations": [
+    {
+      "method": "POST",
+      "path": "/branches/br-polished-resonance-az03nnva/databases",
+      "status": 201,
+      "at": "2026-10-09T10:57:25.333Z"
+    },
+    {
+      "method": "POST",
+      "path": "/branches/br-polished-resonance-az03nnva/buckets",
+      "status": 201,
+      "at": "2026-10-09T10:57:25.980Z"
+    },
+    {
+      "method": "POST",
+      "path": "/branches/br-polished-resonance-az03nnva/functions/dbf25e75fd597ae8c6f5/deployments",
+      "status": 201,
+      "at": "2026-10-09T10:57:39.531Z"
+    },
+    {
+      "method": "POST",
+      "path": "/branches/br-polished-resonance-az03nnva/functions/dbf25e75fd597ae8c6f5/deployments",
+      "status": 201,
+      "at": "2026-10-09T10:57:53.432Z"
+    },
+    {
+      "method": "DELETE",
+      "path": "/branches/br-polished-resonance-az03nnva/functions/dbf25e75fd597ae8c6f5",
+      "status": 204,
+      "at": "2026-10-09T10:58:01.404Z"
+    },
+    {
+      "method": "DELETE",
+      "path": "/branches/br-polished-resonance-az03nnva/buckets/appdrill-bf25e75fd597ae8c6f55",
+      "status": 204,
+      "at": "2026-10-09T10:58:03.756Z"
+    },
+    {
+      "method": "DELETE",
+      "path": "/branches/br-polished-resonance-az03nnva/databases/appdrill_bf25e75fd597ae8c6f55",
+      "status": 200,
+      "at": "2026-10-09T10:58:04.606Z"
+    }
+  ],
+  "invocations": 19,
+  "paidProviderCalls": 0,
+  "liveProductSearchSuccess": false,
+  "productionDatabaseWrites": 0,
+  "productionLedgerReads": 0,
+  "productionFunctionDeployments": 0,
+  "productionSettingsChanges": 0,
+  "triggerCreates": 0,
+  "limitations": [
+    "Shared branch DB owner and S3 credentials can access production resources; this is reviewed-code plus exact-configuration isolation, not IAM isolation.",
+    "The production rollback.mjs apply command is deliberately not run. This tests retained artifact redeployment and existing application session/upload continuity.",
+    "A synthetic aggregate is restored with the new committed ledger library into the same fresh test DB before application deployment. Production export, backup-object storage and scheduled ledger expiry are not exercised.",
+    "The old release lacks the new ledger backup implementation; rollback verifies existing restored aggregate preservation, not execution of the new backup feature on old code.",
+    "Function Free account/project remaining counters are unavailable; bounded use and Free plan do not establish measured headroom.",
+    "No paid search or LIVE product success is tested."
+  ],
+  "releases": {
+    "newSha": "fa4b98ddfafa03067324d5717727483cc114932a",
+    "oldSha": "193256c82693342bb73c0b00cd73cc1c52d297bf",
+    "newEntrySha256": "429eaafccdec1f890ded9f2f5ade85b72013ae05e880eafb05875850d534d60b",
+    "oldEntrySha256": "a7605721da50a3dad539f24c96f801376ddcf9749e3dd4fe80d166121e6fc81a"
+  },
+  "syntheticLedger": {
+    "mode": "LOCALLY_CREATED_SYNTHETIC_AGGREGATE",
+    "libraryGitSha": "fa4b98ddfafa03067324d5717727483cc114932a",
+    "librarySha256": "7df55293b7302645ad8e5ad98efc2ade16f69cb7460d70b80a4f852bab096404",
+    "envelopeSha256": "b5b820f171984d4415bdf39f41fd6d1b06674eb6120e000914a1fe47509a8bc1",
+    "createdAt": "2026-10-09T10:57:08.862Z",
+    "expiresAt": "2026-10-09T11:57:08.862Z",
+    "migrationCount": 7,
+    "ceilingMicrousd": 20000000,
+    "spentMicrousd": 123456,
+    "parentMicrousd": 1000000,
+    "unattributedChildMicrousd": 50000,
+    "heldMicrousd": 1050000
+  },
+  "artifacts": {
+    "newer": {
+      "id": 11612435182,
+      "name": "backend-fa4b98ddfafa03067324d5717727483cc114932a",
+      "size_in_bytes": 9456497,
+      "digest": "sha256:e3aad2849f24aba9c65c211580df7d895d53fa7c5008570b35a5dcbb9fb8f090",
+      "created_at": "2026-10-09T10:54:06Z",
+      "expires_at": "2026-10-16T10:54:05Z",
+      "archiveDigestVerified": true,
+      "filesBoundToArchive": 131
+    },
+    "older": {
+      "id": 11610286659,
+      "name": "backend-193256c82693342bb73c0b00cd73cc1c52d297bf",
+      "size_in_bytes": 9454963,
+      "digest": "sha256:786ec107e87da013402f51c5cdb3672751552aab96155b9f782a4858867a79e0",
+      "created_at": "2026-10-09T10:29:10Z",
+      "expires_at": "2026-10-16T10:29:08Z",
+      "archiveDigestVerified": true,
+      "filesBoundToArchive": 131
+    }
+  },
+  "before": {
+    "observedAt": "2026-10-09T10:57:24.844Z",
+    "preserved": {
+      "branches": [
+        {
+          "id": "br-polished-resonance-az03nnva",
+          "name": "production",
+          "default": true,
+          "primary": true,
+          "protected": false
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "ep-icy-bonus-azimm4ee",
+          "branch_id": "br-polished-resonance-az03nnva",
+          "type": "read_write",
+          "host": "ep-icy-bonus-azimm4ee.c-3.ap-southeast-1.aws.neon.tech",
+          "autoscaling_limit_min_cu": 0.25,
+          "autoscaling_limit_max_cu": 2,
+          "suspend_timeout_seconds": 0
+        }
+      ],
+      "databases": [
+        {
+          "id": 677976,
+          "name": "neondb",
+          "owner_name": "neondb_owner",
+          "branch_id": "br-polished-resonance-az03nnva",
+          "created_at": "2026-10-09T07:32:20Z"
+        }
+      ],
+      "buckets": [
+        {
+          "name": "search-images",
+          "access_level": "private",
+          "created_at": "2026-10-09T07:32:26Z"
+        }
+      ],
+      "functions": [
+        {
+          "id": "api",
+          "slug": "api",
+          "name": "api",
+          "invocation_url": "https://br-polished-resonance-az03nnva-api.compute.c-3.ap-southeast-1.aws.neon.tech/",
+          "created_at": "2026-10-09T07:59:12.782962Z"
+        }
+      ],
+      "triggerFingerprint": "5153fcc40e05cbd630f0e960834fe9391d87ffd1ecb8baa61b80ae6d714e056b",
+      "productionFunction": {
+        "id": "api",
+        "slug": "api",
+        "name": "api",
+        "invocation_url": "https://br-polished-resonance-az03nnva-api.compute.c-3.ap-southeast-1.aws.neon.tech/",
+        "created_at": "2026-10-09T07:59:12.782962Z",
+        "active": {
+          "id": 10,
+          "status": "completed",
+          "memory_mib": 2048,
+          "runtime": "nodejs24",
+          "created_at": "2026-10-09T10:54:19.978632Z"
+        },
+        "current": {
+          "id": 10,
+          "status": "completed",
+          "memory_mib": 2048,
+          "runtime": "nodejs24",
+          "created_at": "2026-10-09T10:54:19.978632Z"
+        }
+      }
+    },
+    "logicalBytes": 33857536,
+    "computeCUSeconds": 2670,
+    "functionsRemaining": null
+  },
+  "createdDatabase": {
+    "id": 678630,
+    "name": "appdrill_bf25e75fd597ae8c6f55",
+    "owner_name": "neondb_owner",
+    "branch_id": "br-polished-resonance-az03nnva",
+    "created_at": "2026-10-09T10:57:25Z"
+  },
+  "createdBucket": {
+    "name": "appdrill-bf25e75fd597ae8c6f55",
+    "created_at": "2026-10-09T10:57:25Z",
+    "access_level": "private"
+  },
+  "rolesBeforeSha256": "06f25fd7ea0b453e678df6ea4536e27015d07063b7bba6bd46335821e3c0ae5d",
+  "cloudLedgerRestore": {
+    "restoredAt": "2026-10-09T10:57:33.140Z",
+    "databaseId": 678630,
+    "paidExecutionEnabled": false,
+    "spentMicrousd": 123456,
+    "heldMicrousd": 1050000,
+    "searchesRestored": 0,
+    "reconciliationRequired": true,
+    "counts": {
+      "users": "0",
+      "sessions": "0",
+      "searches": "0",
+      "jobs": "0",
+      "results": "0"
+    }
+  },
+  "deployments": [
+    {
+      "gitSha": "fa4b98ddfafa03067324d5717727483cc114932a",
+      "entrySha256": "429eaafccdec1f890ded9f2f5ade85b72013ae05e880eafb05875850d534d60b",
+      "deploymentId": 1,
+      "runtime": "nodejs24",
+      "bytesVerified": 130
+    },
+    {
+      "gitSha": "193256c82693342bb73c0b00cd73cc1c52d297bf",
+      "entrySha256": "a7605721da50a3dad539f24c96f801376ddcf9749e3dd4fe80d166121e6fc81a",
+      "deploymentId": 2,
+      "runtime": "nodejs24",
+      "bytesVerified": 130
+    }
+  ],
+  "databaseBytes": 9764864,
+  "rolesAfterSha256": "06f25fd7ea0b453e678df6ea4536e27015d07063b7bba6bd46335821e3c0ae5d",
+  "cleanedSyntheticObjects": 2,
+  "final": {
+    "temporaryFunctionAbsent": true,
+    "temporaryBucketAbsent": true,
+    "temporaryDatabaseAbsent": true,
+    "productionMetadataUnchanged": false,
+    "observedAt": "2026-10-09T10:58:06.024Z"
+  },
+  "cleanupErrors": [
+    {
+      "code": "ERR_ASSERTION",
+      "message": "Check failed; raw error suppressed to protect credentials"
+    }
+  ],
+  "completedAt": "2026-10-09T10:58:06.024Z",
+  "elapsedSeconds": 57.604,
+  "managementRequests": 19,
+  "cleanupManagementRequests": 16
+}

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "mode": "SYNTHETIC_FIXTURE",
+  "releaseSha": "fa4b98ddfafa03067324d5717727483cc114932a",
+  "bucket": "search-images",
+  "createdAt": "2026-10-09T10:57:15.805Z",
+  "expiresAt": "2026-10-09T10:59:15.805Z",
+  "sha256": "cd85179b811bccbeca59b3194c20324d89aeee2cb11fbc7c486dba51500c59f2",
+  "bytes": 1349,
+  "preexistingPrefixCount": 0,
+  "status": "PASSED",
+  "initialAuthenticatedHead": 200,
+  "unsignedReadStatus": 403,
+  "checks": [
+    {
+      "name": "existing private destination and exact isolated namespace verified",
+      "pass": true
+    },
+    {
+      "name": "one bounded valid synthetic envelope uploaded",
+      "pass": true
+    },
+    {
+      "name": "authenticated HEAD200 before schedule",
+      "pass": true
+    },
+    {
+      "name": "unsigned read denied",
+      "pass": true
+    },
+    {
+      "name": "existing attested schedule removed the exact object without manual invocation/deletion",
+      "pass": true
+    }
+  ],
+  "productionDatabaseConnections": 0,
+  "productionDatabaseWrites": 0,
+  "productionDataExports": 0,
+  "paidProviderCalls": 0,
+  "functionManualInvocations": 0,
+  "storageObjectsCreated": 1,
+  "manualCleanup": false,
+  "limitations": [
+    "Synthetic object proves only this scheduled logical-deletion path.",
+    "No user data or actual budget balance was exported.",
+    "Provider-internal soft-deleted copies and branch clones are outside this logical HEAD test."
+  ],
+  "lastCheckedAt": "2026-10-09T10:59:13.272Z",
+  "lastAuthenticatedHead": 404,
+  "automaticDeletionObservedAt": "2026-10-09T10:59:13.272Z",
+  "observedBeforeTtl": true,
+  "responseTimingEvidence": {
+    "headRequestStartedAt": "2026-10-09T10:59:13.272Z",
+    "successful404ReportSavedAt": "2026-10-09T10:59:13.658Z",
+    "savedBeforeTtl": true,
+    "marginMilliseconds": 2147.262939453125,
+    "basis": "Report file write occurs after awaited authenticated HEAD404; original filesystem mtime is an upper bound for receipt."
+  }
+}

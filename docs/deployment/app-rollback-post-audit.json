@@ -1,0 +1,158 @@
+{
+  "observedAt": "2026-10-09T11:00:24.404Z",
+  "status": "STABLE_CONFIG_CONFIRMED_TEST_RESOURCES_REMOVED",
+  "originalRunStatus": "CLEANUP_REQUIRES_ATTENTION",
+  "originalRunUnmodified": true,
+  "appRollbackPassed": true,
+  "syntheticCloudLedgerRestore": {
+    "restoredAt": "2026-10-09T10:57:33.140Z",
+    "databaseId": 678630,
+    "paidExecutionEnabled": false,
+    "spentMicrousd": 123456,
+    "heldMicrousd": 1050000,
+    "searchesRestored": 0,
+    "reconciliationRequired": true,
+    "counts": {
+      "users": "0",
+      "sessions": "0",
+      "searches": "0",
+      "jobs": "0",
+      "results": "0"
+    }
+  },
+  "validations": {
+    "singleOriginalTrigger": true,
+    "baselineIdentityMatches": true,
+    "trackedScheduleIdentityMatches": true,
+    "pathMatchesDeclaredProductionSettings": true,
+    "cronMatchesDeclaredProductionConfig": true,
+    "functionMatchesProductionTarget": true,
+    "enabledMatchesProduction": true,
+    "allOtherPreservedGroupsEqual": true,
+    "productionActiveCurrentDeploymentUnchanged": true,
+    "allNewResourcesAbsent": true,
+    "sharedRoleFingerprintsEqual": true,
+    "mutationsOnlyReviewedNewResourceRoutes": true,
+    "noTriggerOrProductionFunctionMutation": true,
+    "productionHealthStill200PaidDisabled": true
+  },
+  "stableTrigger": {
+    "trigger_id": "trigger-d3f6b107-2b5c-4e94-b353-50fe83b184bc",
+    "name": "search-sweep",
+    "type": "schedule",
+    "function_slug": "api",
+    "functionPathSha256": "ec7560b4eceb7af974856a48f637fe68993a46a0dddf70b18d3ea37d1eb8616e",
+    "schedule": {
+      "cron": "* * * * *"
+    },
+    "enabled": true,
+    "created_at": null
+  },
+  "stableTriggerSha256": "379d0a4fa46d6d834accb1a0cfd92bd0a10e7584e49515c4c2ffcd8c9f756450",
+  "currentVolatileNextRunAt": "2026-10-09T11:01:00.000000Z",
+  "productionDeployment": {
+    "id": "api",
+    "slug": "api",
+    "name": "api",
+    "invocation_url": "https://br-polished-resonance-az03nnva-api.compute.c-3.ap-southeast-1.aws.neon.tech/",
+    "created_at": "2026-10-09T07:59:12.782962Z",
+    "active": {
+      "id": 10,
+      "status": "completed",
+      "memory_mib": 2048,
+      "runtime": "nodejs24",
+      "created_at": "2026-10-09T10:54:19.978632Z"
+    },
+    "current": {
+      "id": 10,
+      "status": "completed",
+      "memory_mib": 2048,
+      "runtime": "nodejs24",
+      "created_at": "2026-10-09T10:54:19.978632Z"
+    }
+  },
+  "cleanup": {
+    "allTemporaryResourcesAbsent": true,
+    "syntheticObjectsRemoved": 2,
+    "deleteStatuses": [
+      {
+        "path": "/branches/br-polished-resonance-az03nnva/functions/dbf25e75fd597ae8c6f5",
+        "status": 204
+      },
+      {
+        "path": "/branches/br-polished-resonance-az03nnva/buckets/appdrill-bf25e75fd597ae8c6f55",
+        "status": 204
+      },
+      {
+        "path": "/branches/br-polished-resonance-az03nnva/databases/appdrill_bf25e75fd597ae8c6f55",
+        "status": 200
+      }
+    ]
+  },
+  "productionHealth": {
+    "status": 200,
+    "service": "SSANDEVISTHAN",
+    "schemaVersion": 3,
+    "backend": "neon",
+    "searchEnabled": false
+  },
+  "scriptMutationEvidence": {
+    "scriptSha256": "79c1af5e6d8e4617eeb61b101bd9e74f3a343ba9c032143837d5bf07665f1693",
+    "guardRejectsUnlistedMethodsAndPaths": true,
+    "managementWrites": [
+      {
+        "method": "POST",
+        "path": "/branches/br-polished-resonance-az03nnva/databases",
+        "status": 201,
+        "at": "2026-10-09T10:57:25.333Z"
+      },
+      {
+        "method": "POST",
+        "path": "/branches/br-polished-resonance-az03nnva/buckets",
+        "status": 201,
+        "at": "2026-10-09T10:57:25.980Z"
+      },
+      {
+        "method": "POST",
+        "path": "/branches/br-polished-resonance-az03nnva/functions/dbf25e75fd597ae8c6f5/deployments",
+        "status": 201,
+        "at": "2026-10-09T10:57:39.531Z"
+      },
+      {
+        "method": "POST",
+        "path": "/branches/br-polished-resonance-az03nnva/functions/dbf25e75fd597ae8c6f5/deployments",
+        "status": 201,
+        "at": "2026-10-09T10:57:53.432Z"
+      },
+      {
+        "method": "DELETE",
+        "path": "/branches/br-polished-resonance-az03nnva/functions/dbf25e75fd597ae8c6f5",
+        "status": 204,
+        "at": "2026-10-09T10:58:01.404Z"
+      },
+      {
+        "method": "DELETE",
+        "path": "/branches/br-polished-resonance-az03nnva/buckets/appdrill-bf25e75fd597ae8c6f55",
+        "status": 204,
+        "at": "2026-10-09T10:58:03.756Z"
+      },
+      {
+        "method": "DELETE",
+        "path": "/branches/br-polished-resonance-az03nnva/databases/appdrill_bf25e75fd597ae8c6f55",
+        "status": 200,
+        "at": "2026-10-09T10:58:04.606Z"
+      }
+    ],
+    "productionFunctionOrTriggerWriteCount": 0,
+    "productionDatabaseWriteCount": 0,
+    "productionLedgerReadCount": 0,
+    "paidProviderCalls": 0
+  },
+  "limitations": [
+    "The original whole-trigger fingerprint included next_run_at, which naturally advances every minute. That original exact hash check failed and is not relabeled as passed.",
+    "The original full trigger object existed only in process memory. Its exact pre-drill dynamic values cannot be reconstructed; causality of every byte difference is not claimed.",
+    "Stable current trigger identity, schedule, target-path hash and enabled state match independently retained baseline/declarative settings; all other original metadata groups and production active/current deployment IDs remain byte-identical.",
+    "Shared branch credentials are not IAM isolation. No drill retry or production mutation was performed during this read-only audit.",
+    "Synthetic ledger restore and app rollback pass do not claim production data recovery, scheduled backup expiry, remaining Functions quota, paid API use or live product-search success."
+  ]
+}

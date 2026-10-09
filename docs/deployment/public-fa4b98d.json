@@ -1,0 +1,113 @@
+{
+  "sha": "fa4b98ddfafa03067324d5717727483cc114932a",
+  "observedAt": "2026-10-09T10:58:28.025Z",
+  "serviceUrl": "https://ssandevisthan.pages.dev/",
+  "workflows": [
+    {
+      "name": "Verify application",
+      "id": 37920124432,
+      "conclusion": "success",
+      "url": "https://github.com/NoNamad5196/ssandevisthan/actions/runs/37920124432"
+    },
+    {
+      "name": "Deploy Pages",
+      "id": 37920360757,
+      "conclusion": "success",
+      "url": "https://github.com/NoNamad5196/ssandevisthan/actions/runs/37920360757"
+    },
+    {
+      "name": "Deploy backend",
+      "id": 37920360696,
+      "conclusion": "success",
+      "url": "https://github.com/NoNamad5196/ssandevisthan/actions/runs/37920360696"
+    }
+  ],
+  "ci": {
+    "unitTestsPassed": 426,
+    "testFilesPassed": 18,
+    "browserTestsPassed": 23,
+    "cloudOptInSkippedInCI": 1
+  },
+  "browser": {
+    "mode": "REAL_INFRASTRUCTURE_PAID_DISABLED",
+    "url": "https://ssandevisthan.pages.dev/",
+    "testedAt": "2026-10-09T10:58:28.025Z",
+    "liveProductSearch": false,
+    "uploadDeletionAccepted": true,
+    "calls": [
+      {
+        "path": "/auth/anonymous",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/uploads",
+        "method": "POST",
+        "status": 201
+      },
+      {
+        "path": "/uploads/{uploadId}/content",
+        "method": "PUT",
+        "status": 200
+      },
+      {
+        "path": "/uploads/{uploadId}/finalize",
+        "method": "POST",
+        "status": 200
+      },
+      {
+        "path": "/searches",
+        "method": "POST",
+        "status": 503
+      },
+      {
+        "path": "/uploads/{uploadId}",
+        "method": "DELETE",
+        "status": 204
+      }
+    ],
+    "pageErrors": []
+  },
+  "visual": {
+    "reference": "design/reference/original.png",
+    "capture": ".cache/deployment/final-fa4b98d/home-1586x992.png",
+    "viewport": {
+      "width": 1586,
+      "height": 992
+    },
+    "masks": [],
+    "note": "Difference metrics are diagnostic, not a release acceptance threshold. No regions are masked. Visual reviewer approval is still required.",
+    "metrics": {
+      "full": {
+        "meanAbsoluteChannelDifference": 1.501,
+        "pixelsOver24DifferencePercent": 1.63
+      },
+      "header": {
+        "meanAbsoluteChannelDifference": 2.525,
+        "pixelsOver24DifferencePercent": 2.563
+      },
+      "logo": {
+        "meanAbsoluteChannelDifference": 0,
+        "pixelsOver24DifferencePercent": 0
+      },
+      "collage": {
+        "meanAbsoluteChannelDifference": 0,
+        "pixelsOver24DifferencePercent": 0
+      },
+      "upload": {
+        "meanAbsoluteChannelDifference": 5.345,
+        "pixelsOver24DifferencePercent": 5.58
+      },
+      "headline": {
+        "meanAbsoluteChannelDifference": 0,
+        "pixelsOver24DifferencePercent": 0
+      },
+      "deals": {
+        "meanAbsoluteChannelDifference": 3.619,
+        "pixelsOver24DifferencePercent": 4.17
+      }
+    }
+  },
+  "paidProviderCalls": 0,
+  "liveProductSearchSuccess": false
+}
