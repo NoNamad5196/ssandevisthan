@@ -1,0 +1,8 @@
+{
+  "name": "@ssandevisthan/search-core",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@ssandevisthan/contracts": "3.0.0" }
+}

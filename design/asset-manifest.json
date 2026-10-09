@@ -1,0 +1,248 @@
+{
+  "designVersion": "mockup-v1",
+  "source": {
+    "path": "design/reference/original.png",
+    "sha256": "531162d78410f8a01a408d12955d0ab10d3c11d4add6e645a127bc5096ccc3ab",
+    "width": 1586,
+    "height": 992,
+    "notion": "https://app.notion.com/p/3f47cdef782d8145b2a8ee2543d43d7c"
+  },
+  "assets": [
+    {
+      "path": "apps/web/public/artwork/header-logo.png",
+      "sourceRect": {
+        "left": 37,
+        "top": 7,
+        "width": 172,
+        "height": 39
+      },
+      "sha256": "40abcca4be6238e7c1f54b17f420756e6ee1d5ed9354f30c0461a6131e75f234",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/hero-logo.png",
+      "sourceRect": {
+        "left": 40,
+        "top": 85,
+        "width": 776,
+        "height": 205
+      },
+      "sha256": "a75f0f6dbfc58f3fb0b44e6c5546ab9bf3ebfb2ffc929e506a93a9f46d3b6eab",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/hero-collage.png",
+      "sourceRect": {
+        "left": 760,
+        "top": 55,
+        "width": 826,
+        "height": 766
+      },
+      "sha256": "77f5b0af422ca9fd29294198d01d474c74dbdfc515a1e76d024f0aaa8c832cfa",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/hero-left-edge.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 55,
+        "width": 55,
+        "height": 766
+      },
+      "sha256": "ced2da40c5ccfc698dbfe291c6ac7a43554bd402b403470b0c300885e5577a2c",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/yellow-texture.png",
+      "sourceRect": {
+        "left": 135,
+        "top": 414,
+        "width": 100,
+        "height": 95
+      },
+      "sha256": "cb17cd0466d431471bc2298941786385cbdae4ca635deb07e03b954ebd9e26c4",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/deal-collage.png",
+      "sourceRect": {
+        "left": 1104,
+        "top": 821,
+        "width": 482,
+        "height": 171
+      },
+      "sha256": "0b86a205a659db90c59ad3abb495d50381b4b1921c5060e220c423be3cad3bc5",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/deal-texture.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 821,
+        "width": 510,
+        "height": 42
+      },
+      "sha256": "317ae8da283f36405ed641fd1ded1bbaf3b65c4d7ca37ba6be282acb8007231e",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/image-add.png",
+      "sourceRect": {
+        "left": 365,
+        "top": 438,
+        "width": 80,
+        "height": 70
+      },
+      "sha256": "0b864b91f66b80d38c0f7d5fcc64a9ef6fd7c74e46999f36a365a8ff5b8dd668",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/step-shirt.png",
+      "sourceRect": {
+        "left": 62,
+        "top": 735,
+        "width": 53,
+        "height": 54
+      },
+      "sha256": "63f8bc7ad1dd03802f8201c85b54c0ec5fcc68daa8ed3975baacff1a8ab7ec14",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/step-search.png",
+      "sourceRect": {
+        "left": 290,
+        "top": 735,
+        "width": 51,
+        "height": 54
+      },
+      "sha256": "23bf75d35cdd32f0af29aed58247b866a422875cf019fbc9223036a8a39034be",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/step-bag.png",
+      "sourceRect": {
+        "left": 553,
+        "top": 735,
+        "width": 51,
+        "height": 54
+      },
+      "sha256": "8ff7ff840bdf61efeae69c1a643ad51f54660f00e9fde37a329beac7980864b9",
+      "transform": "lossless crop"
+    },
+    {
+      "path": "apps/web/public/artwork/hero-surface.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 55,
+        "width": 1586,
+        "height": 766
+      },
+      "sha256": "e0a881af566877f18fef28daf43df7194707bb574e607c8bb25dde8673a56790",
+      "transform": "original pixels; functional regions cleared for DOM text",
+      "cutouts": [
+        [
+          50,
+          299,
+          707,
+          44
+        ],
+        [
+          202,
+          459,
+          427,
+          77
+        ],
+        [
+          182,
+          542,
+          450,
+          70
+        ],
+        [
+          289,
+          613,
+          250,
+          25
+        ],
+        [
+          59,
+          677,
+          698,
+          68
+        ]
+      ]
+    },
+    {
+      "path": "apps/web/public/artwork/subhead-fill.png",
+      "sourceRect": {
+        "left": 50,
+        "top": 388,
+        "width": 707,
+        "height": 12
+      },
+      "sha256": "4a03f154fc3b1af13562ab42d1f1f84298d4aa24421a988715c8ec6984279369",
+      "transform": "adjacent original texture resized for accessible UI text backdrop"
+    },
+    {
+      "path": "apps/web/public/artwork/upload-copy-fill.png",
+      "sourceRect": {
+        "left": 202,
+        "top": 509,
+        "width": 427,
+        "height": 8
+      },
+      "sha256": "a99c1147129be7032e4d7a3dce62bf55330d31001a3688a03bc72ab031354bc3",
+      "transform": "adjacent original texture resized for accessible UI text backdrop"
+    },
+    {
+      "path": "apps/web/public/artwork/upload-control-fill.png",
+      "sourceRect": {
+        "left": 182,
+        "top": 587,
+        "width": 450,
+        "height": 10
+      },
+      "sha256": "4d75f19d9b884399f84a9e48239349acb339fdfda5af98114aef4b39b4cb6a48",
+      "transform": "adjacent original texture resized for accessible UI text backdrop"
+    },
+    {
+      "path": "apps/web/public/artwork/upload-help-fill.png",
+      "sourceRect": {
+        "left": 289,
+        "top": 697,
+        "width": 250,
+        "height": 10
+      },
+      "sha256": "2b96e8b6984ce8a3e62f1677c115d00887a979090ec9eda92f002a5375b7dd07",
+      "transform": "adjacent original texture resized for accessible UI text backdrop"
+    },
+    {
+      "path": "apps/web/public/artwork/steps-fill.png",
+      "sourceRect": {
+        "left": 59,
+        "top": 799,
+        "width": 698,
+        "height": 16
+      },
+      "sha256": "329fcbd09909250c6ac0736ed09d41586d8617413dc497c44596b9f1d0f7b410",
+      "transform": "adjacent original texture resized for accessible UI text backdrop"
+    }
+  ],
+  "fonts": [
+    {
+      "path": "apps/web/public/fonts/PretendardVariable.woff2",
+      "source": "https://github.com/orioncactus/pretendard/releases/tag/v1.3.9",
+      "version": "1.3.9",
+      "license": "design/font-license/Pretendard-OFL.txt",
+      "sha256": "9599f12fd42fc0bce1cd50b47a0c022e108d7aa64dd0d1bb0ed44f3282d900b4"
+    },
+    {
+      "path": "apps/web/public/fonts/GmarketSansBold.ttf",
+      "source": "https://corp.gmarket.com/fonts/GmarketSansTTF.zip",
+      "version": "official distribution downloaded 2026-10-09",
+      "license": "design/font-license/GmarketSans-OFL.txt",
+      "sha256": "ff7c354dd1a324e4cecc1223c4f71e74fa81be7027e0c7f6324c475909cacefc"
+    }
+  ],
+  "logoDecision": "Preserve original PNG crops; uploaded larger logos remain unapproved restoration candidates."
+}

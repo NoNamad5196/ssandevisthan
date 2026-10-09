@@ -1,0 +1,54 @@
+name: Verify application
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+      - name: Verify original assets and font notices
+        run: node scripts/verify-assets.mjs
+      - name: Install browser for deterministic UI checks
+        run: npx playwright install --with-deps chromium
+      - name: Validate desktop and mobile flows without live API calls
+        run: npm run test:e2e
+      - name: Retain browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-failures-${{ github.sha }}
+          path: |
+            test-results
+            playwright-report
+          retention-days: 7
+      - name: Retain exactly the verified frontend artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: apps/web/dist
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7

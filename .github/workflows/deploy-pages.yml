@@ -1,0 +1,71 @@
+name: Deploy verified frontend to Cloudflare Pages
+
+on:
+  workflow_run:
+    workflows: [Verify application]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+  deployments: write
+
+concurrency:
+  group: cloudflare-pages-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Untrusted pull-request runs must never reach a secret-bearing deployment job.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      vars.CLOUDFLARE_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - name: Do not let a slower old build replace the latest main
+        id: current
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          latest_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          if [ "$latest_sha" = "$EXPECTED_SHA" ]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'A newer main commit exists; this artifact will not be deployed.'
+            echo 'deploy=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Download artifact from the exact successful run
+        if: steps.current.outputs.deploy == 'true'
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: frontend-${{ github.event.workflow_run.head_sha }}
+          path: apps/web/dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Require configured free-tier Pages target
+        if: steps.current.outputs.deploy == 'true'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+        run: |
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'Cloudflare account ID is not configured'; exit 1; }
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'Cloudflare Pages deploy token is not configured'; exit 1; }
+          [[ "$CLOUDFLARE_PAGES_PROJECT" =~ ^[a-z0-9][a-z0-9-]{0,57}[a-z0-9]$ ]] || { echo 'Cloudflare Pages project name is invalid'; exit 1; }
+          test -s apps/web/dist/index.html
+      - name: Publish verified static assets
+        if: steps.current.outputs.deploy == 'true'
+        id: pages
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.149.0
+          command: pages deploy apps/web/dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main --commit-hash=${{ github.event.workflow_run.head_sha }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,53 @@
+{
+  "name": "ssandevisthan",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @ssandevisthan/web",
+    "build": "npm run build --workspace @ssandevisthan/web",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "preview": "npm run preview --workspace @ssandevisthan/web",
+    "assets": "node scripts/prepare-assets.mjs"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1148.0",
+    "@aws-sdk/s3-request-presigner": "^3.1148.0",
+    "@neon/functions": "^0.11.0",
+    "@supabase/supabase-js": "^2.100.0",
+    "@tanstack/react-query": "^5.90.0",
+    "jose": "^6.2.12",
+    "lucide-react": "^0.577.0",
+    "pg": "^8.23.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.13.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@imagemagick/magick-wasm": "^0.0.44",
+    "@neon/config": "^1.8.6",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "deno": "^2.9.6",
+    "sharp": "^0.35.5",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.75.0"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@ssandevisthan/fixtures",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@ssandevisthan/contracts": "3.0.0", "@ssandevisthan/search-core": "3.0.0" }
+}
