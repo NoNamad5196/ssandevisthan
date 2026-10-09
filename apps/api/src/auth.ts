@@ -1,6 +1,6 @@
 import {randomBytes,createHash,createCipheriv,createDecipheriv} from 'node:crypto';
 import {SignJWT,jwtVerify} from 'jose';
-import {pool} from './database.ts';
+import {pool,markActivity} from './database.ts';
 import {AppError,jsonBody} from '../../../supabase/shared/runtime.ts';
 const audience='ssandevisthan';const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
 function secret(){const b=Buffer.from(process.env.AUTH_JWT_SECRET_BASE64??'','base64');if(b.length<32)throw new AppError('TEMPORARILY_UNAVAILABLE',503);return b;}
@@ -29,7 +29,7 @@ export async function authRoute(req:Request,refresh:boolean):Promise<Response>{
     if(req.method!=='POST')throw new AppError('NOT_FOUND',404);
     const body=await jsonBody(req) as Record<string,unknown>;
     if(!body||body.schemaVersion!==3||Object.keys(body).some(k=>!['schemaVersion',...(refresh?['refreshToken']:[])].includes(k)))throw new AppError('INVALID_INPUT',400);
-    const client=await pool.connect();let data;
+    if(!refresh)await markActivity();const client=await pool.connect();let data;
     try{
       await client.query('BEGIN');
       if(!refresh){

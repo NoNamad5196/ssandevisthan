@@ -7,7 +7,7 @@
 - 구현 계약: `docs/contracts/`에 보존한 현재 Notion v3 문서 7개
 - 디자인 원본: `design/reference/original.png` (1586×992)
 
-현재 공개 프론트엔드는 사진 선택·검증·미리보기·교체·삭제, 핫딜 입력, 반응형 화면을 제공합니다. 실제 검색 API 연결과 LIVE 검증은 진행 중입니다. 테스트 fixture를 실제 상품 검색 성공으로 표시하지 않습니다.
+공개 프론트엔드와 Neon 백엔드가 연결되어 있습니다. 공개 HTTPS 브라우저에서 실제 익명 인증, 사진 업로드·정규화·확정·삭제를 검증했습니다. **AI 상품 검색은 아직 출시 전입니다.** OpenAI 누적 비용 검증이 끝나기 전에는 검색을 명시적으로 차단합니다. 테스트 fixture를 실제 상품 검색 성공으로 표시하지 않습니다.
 
 ## 실행과 검증
 
@@ -23,6 +23,7 @@ npm run build
 npm run test:e2e
 node scripts/verify-assets.mjs
 node scripts/verify-visual.mjs
+node scripts/verify-secrets.mjs
 ```
 
 `apps/web/.env.example`을 참고하여 공개 API origin을 설정합니다. `VITE_` 변수에는 공개 주소만 넣습니다. OpenAI 키·DB URL·JWT 서명키·배포 토큰은 서버 비밀 설정에만 저장합니다. 로컬 비밀은 Git에서 제외된 `.secrets/` 안에서만 취급합니다.
@@ -36,7 +37,7 @@ node scripts/verify-visual.mjs
 - `supabase/shared`: 공통 검색 파이프라인, OpenAI, 안전한 외부 요청, 상품 추출
 - `supabase/migrations`: 계약에 따른 PostgreSQL 스키마·트랜잭션·RLS
 - `deploy/neon`: 사용자 요청에 따라 선택한 대체 무료 백엔드 배포
-- `.github/workflows`: 검증을 통과한 main commit의 프론트엔드 자동 배포
+- `.github/workflows`: 검증을 통과한 main commit의 프론트엔드·백엔드 배포
 
 Supabase 무료 프로젝트 한도를 확인한 뒤 사용자가 다른 백엔드를 요청했습니다. 기존 프로젝트를 중지·삭제하지 않고 Neon Free를 선택했습니다. DB·API·검색 계약을 유지하고 인증·저장소·실행 환경을 어댑터로 교체합니다. 기존 Supabase 구현은 별도 검증 가능한 경로로 남아 있습니다.
 
@@ -49,3 +50,16 @@ Supabase 무료 프로젝트 한도를 확인한 뒤 사용자가 다른 백엔�
 OpenAI 외 유료 인프라는 활성화하지 않습니다. 전체 파일럿의 OpenAI 누적 한도는 **USD 20**이며 기간별로 초기화하지 않습니다. 과거 사용액과 현재 요율·호출 상한이 확인되기 전에는 유료 실행을 차단합니다. 가격·이미지·옵션·국내 새상품 근거가 없는 후보는 구매 추천으로 승격하지 않습니다. 판매처 접근 차단이나 CAPTCHA를 우회하지 않습니다.
 
 공개 배포가 존재한다는 사실과 실사용 릴리스 검증 완료는 별개입니다. 미완료 운영·보안·품질·비용 검증은 검증 보고서에 남기고 완료로 표시하지 않습니다.
+
+## 실제 검증 기록
+
+- `docs/deployment/api-smoke.json`: 실제 클라우드의 익명 사용자 격리·업로드·삭제 17개 검사. OpenAI 호출 0회, 상품 검색 성공 아님.
+- `docs/deployment/normalizer-live.json`: 실제 클라우드의 2,400만 화소 입력 메모리·CPU·메타데이터 제거 측정.
+- `docs/deployment/egress-live.json`: 실제 공개 HTTPS 연결과 내부망·DNS 변경 차단.
+- `docs/deployment/retention-smoke.json`: 실제 스케줄러의 사진 삭제와 만료 데이터 접근 차단.
+- `docs/deployment/operations-live.json`: 큐·원장·보존기한 읽기 전용 집계. 과거 지출 미확인 시 가용 예산은 `null`입니다.
+- `docs/merchant-verification.md`: 실제 판매처 응답의 성공·실패 근거. 적격 상품이 없으면 그대로 기록합니다.
+- `docs/openai-cost-verification.md`: 비용 상한의 근거, 구현 검증, 아직 필요한 계정 확인.
+- `docs/deployment-readiness.md`: 배포·글꼴·시각 비교 및 잔여 항목.
+
+운영 집계는 서버 자격 증명을 환경변수 또는 Git에서 제외한 설정으로 준비한 뒤 `node deploy/neon/inspect.mjs`로 확인합니다. 이 명령은 읽기 전용 트랜잭션을 사용하고 사용자 사진·프롬프트·토큰을 출력하지 않습니다. 배포·마이그레이션·스케줄러 절차는 `deploy/neon/README.md`를 따릅니다.

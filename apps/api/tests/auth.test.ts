@@ -2,7 +2,7 @@ import {beforeAll,afterAll,describe,it,expect,vi} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 import {readFile} from 'node:fs/promises';
 const harness=vi.hoisted(()=>({db:null as any}));
-vi.mock('../src/database.ts',()=>({pool:{
+vi.mock('../src/database.ts',()=>({markActivity:async()=>{},pool:{
   async query(sql:string,values:unknown[]=[]){const r=await harness.db.query(sql,values);return{...r,rowCount:r.rows.length||r.affectedRows};},
   async connect(){return{query:async(sql:string,values:unknown[]=[])=>{const r=await harness.db.query(sql,values);return{...r,rowCount:r.rows.length||r.affectedRows};},release(){}};},
 }}));

@@ -6,7 +6,7 @@ Checked on 2026-10-09 (Asia/Seoul). This records verified deployment access, not
 
 - Repository created: https://github.com/NoNamad5196/ssandevisthan. The new repository was empty when created; no existing repository was modified. It is now private because its design assets and internal Notion contracts are not authorized for unrestricted source distribution.
 - GitHub CLI authentication works outside the restricted network sandbox. The initial sandboxed `gh auth status` failure was not an expired credential. Existing keyring authentication includes `repo` and `workflow` scope. Never print or copy its credential.
-- Cloudflare Pages project `ssandevisthan` was created on the existing account. The first frontend deployment is live at https://ssandevisthan.pages.dev (immutable deployment https://12e0f061.ssandevisthan.pages.dev). External Chromium verified HTTP 200, the upload control, and no page errors. This initial deployment does not yet contain a configured live search backend.
+- Cloudflare Pages project `ssandevisthan` was created on the existing account. The frontend is live at https://ssandevisthan.pages.dev (latest verified immutable deployment https://b1f25d51.ssandevisthan.pages.dev). GitHub Actions deployed commit `7658294194e056c20719b5eaaad7afbac9edf3a7`. External Chromium verified HTTP 200, production backend communication, the upload flow, and no page errors. Paid product search remains disabled pending its separate release gates.
 - Supabase dashboard login works for organization **NoNamad / Free**. New-project creation is blocked because the owner has reached the **2 active free project** limit. No existing project was paused, deleted, upgraded, or reused.
 - The user declined pausing existing Supabase services and authorized an alternative free backend. A new dedicated Neon Free organization `org-cool-smoke-12777013` and project `lucky-sun-06718695` (`ssandevisthan`, AWS Singapore) were created with Postgres, Functions, and private `search-images` object storage. Neon Auth and AI Gateway are disabled because the application implements the contract's anonymous sessions itself and calls OpenAI directly. Existing Neon and Supabase resources were left unchanged.
 - A project-scoped Neon API key is stored only in ignored local deployment configuration and the encrypted GitHub `NEON_API_KEY` secret. Broad account-wide CLI OAuth was rejected by automatic approval review and was not granted; the narrower project key solved deployment access. The database connection and branch-only storage read/write credentials are kept in ignored `.secrets/neon.json` and passed only to server tooling.
@@ -33,17 +33,15 @@ The initial frontend preview does not authorize enabling LIVE searches before ba
 
 ## Cloud prerequisites still requiring action
 
-1. Push the completed CI/deployment workflows and verify a successful GitHub-triggered Pages deployment. Deployment credentials and project variables are ready; a successful workflow run has not yet been observed.
-2. Complete cloud backend validation for the dedicated Free project: schema/RLS, worker leases, cleanup schedules, and permitted frontend origin. Scoped CLI access and database/private storage credentials are ready; backend deployment and smoke checks are tracked separately.
-3. Rebuild/redeploy the frontend with the configured actual `VITE_API_BASE_URL`, then confirm browser communication under the production Content Security Policy.
-4. Reconcile prior OpenAI pilot expenditure/reservations before enabling any paid call. Unknown historical spend must fail closed under the Notion USD 20 cumulative ceiling.
-5. Verify the issued HTTPS deployment with real anonymous-user A/B isolation, upload, persisted queue execution, cancellation, trustworthy product evidence, live OpenAI behavior, and retention cleanup. Report REPLAY fixtures separately from LIVE tests.
+1. Complete cloud backend release validation for the dedicated Free project: schema/RLS, worker leases, cleanup schedules, and permitted frontend origin. Backend smoke evidence is tracked separately under `docs/deployment/`.
+2. Reconcile prior OpenAI pilot expenditure/reservations and validate the bounded cost policy before enabling any paid call. Unknown historical spend must fail closed under the Notion USD 20 cumulative ceiling.
+3. Finish the issued HTTPS deployment's persisted queue execution, cancellation, trustworthy product evidence, and budgeted live OpenAI/search verification. Public frontend-to-backend upload verification has passed, but it is not LIVE product-search success. Report REPLAY fixtures separately from LIVE tests.
 
 ## Official sources checked
 
 - [Cloudflare Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/)
 - [Cloudflare Direct Upload with GitHub Actions](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/)
-- [Cloudflare Pages free limits](https://developers.cloudflare.com/pages/platform/limits/): 500 builds/month, 20,000 files/site, 25 MiB per asset. Account usage remains unverified until login.
+- [Cloudflare Pages free limits](https://developers.cloudflare.com/pages/platform/limits/): 500 builds/month, 20,000 files/site, 25 MiB per asset. Actual dashboard observations and their limits are recorded below.
 - [Supabase billing FAQ](https://supabase.com/docs/guides/platform/billing-faq): two active free projects; paused projects do not count. Dashboard quota confirmation takes precedence over assumptions.
 - [Operations/release contract v3](https://app.notion.com/p/3ec7cdef782d8146917ec72af0ef8d89)
 
@@ -57,8 +55,38 @@ The 1586×992 desktop and 390×844 mobile screenshots were inspected directly. D
 
 The unmasked desktop comparison reports 3.696% of pixels with at least one channel differing by more than 24/255, with mean channel difference 3.944/255. Logo and clothing collage regions have zero difference. Remaining differences are chiefly the functional UI text, icons, reconstructed text backdrops, header navigation, and hot-deal controls. These diagnostics are **not** an automatic visual acceptance threshold, and do not mean every rendered pixel matches the reference.
 
-Reproduce the evidence with `npm run test:e2e`, then `node scripts/verify-visual.mjs test-results/visual/home-1586x992.png`. An optional third argument chooses a durable evidence directory. Current inspected copies are under ignored `.cache/deployment/phase-b/`; the deployed first frontend capture is `.cache/deployment/live-home-1586x992.png`. Subsequent backend deployment requires another production capture because that first public build predates the final Phase B visual refinements.
+Reproduce the evidence with `npm run test:e2e`, then `node scripts/verify-visual.mjs test-results/visual/home-1586x992.png`. An optional third argument chooses a durable evidence directory. Inspected local copies are under ignored `.cache/deployment/phase-b/`. The current production capture is `.cache/deployment/production/home-1586x992.png`; its unmasked report under `.cache/deployment/production/verified/` matches the local metrics above. The capture waits for font, DOM-image, and CSS-background decoding, including pseudo-elements, before recording pixels. An earlier capture before CSS artwork loaded was discarded as invalid evidence.
 
 The seven deterministic Playwright tests cover five viewport sizes (1586, 1440, 1280, 390, and 360 pixels wide), missing/undecoded assets and fonts, overflow, upload MIME/size/decode validation, image replacement, hot-deal minimum-length validation, keyboard focus, and reduced motion. These tests do not call paid providers and do not establish LIVE search success.
 
 Ten additional `@mock` browser tests exercise the real frontend against contract-validated synthetic API responses. They cover anonymous authentication, binary content upload/finalization, retained idempotency key after a failed search submission, queued/running/result polling, shipping-cohort sort behavior using the actual Gate/ranker fixtures, all empty/error/partial/cancel states, deletion, owner mismatch on refresh, malformed-price rejection, and text deals. The combined local suite passed **17/17** in 50.2 seconds on 2026-10-09. All remote requests are intercepted and unrecognized destinations fail closed; the mock suite is skipped when `E2E_BASE_URL` is supplied so it cannot masquerade as a LIVE deployment test. Its isolated Vite server receives a synthetic `.test` API origin, and its screenshots are prefixed `MOCK-`.
+
+## Verified automated deployment and public smoke
+
+- [Verify application run 37903786309](https://github.com/NoNamad5196/ssandevisthan/actions/runs/37903786309) passed the Linux build, type checks, deterministic tests, asset/font verification, and 17 Playwright checks. The first Linux run exposed CRLF-versus-LF differences in the saved font notice; verification now normalizes line endings without altering license content.
+- [Deploy frontend run 37903985288](https://github.com/NoNamad5196/ssandevisthan/actions/runs/37903985288), attempt 2, successfully deployed the same tested commit. A malformed token value in the first attempt was corrected using an exact-byte CLI secret update. Any token exposed during the failed configuration flow was subsequently rotated, retaining the same scope and expiry. The active token is stored only in ignored configuration and encrypted GitHub secrets.
+- At **2026-10-09 17:34 KST**, the opt-in `@cloud` Playwright test passed in 6.7 seconds against the actual public URL. Health reported `searchEnabled:false`; anonymous auth returned 200, upload creation 201, binary content 200, finalize 200, search submission the expected honest 503, and fixture deletion 204. No purchase result was fabricated. The page reported no JavaScript errors. The sanitized report is `.cache/deployment/production/browser-smoke.json`; auth responses and tokens are excluded from traces and reports.
+- The public desktop screenshot was independently compared with `design/reference/original.png`. Original logo and clothing collage regions match exactly. Main source lettering, industrial texture, yellow/black palette, panel silhouette, and region positions are retained. Functional UI caption widths, font rasterization, small button/icon details and hot-deal controls still differ; the 3.696% full-image diagnostic is not a claim of complete pixel identity or human design approval.
+
+Run the public smoke only with `E2E_BASE_URL=https://ssandevisthan.pages.dev` and `E2E_LIVE_SMOKE=paid-disabled`. It refuses to proceed if health says paid search is enabled, uses a repository-owned fixture, and requests deletion afterwards. This is a **real infrastructure** test with **no LIVE product-search success**.
+
+## Actual free-tier dashboard observations
+
+Read-only account checks on **2026-10-09, approximately 17:27–17:35 KST** showed:
+
+| Service / counter | Observed usage | Interpretation |
+| --- | --- | --- |
+| Dedicated Neon organization plan | Free, $0/month | No upgrade or automatic billing enabled |
+| Neon compute | 0.15 CU-hours of 100 included | About 99.85 CU-hours remaining at the displayed timestamp |
+| Neon database storage | 0.03 GB of 1 GB | About 0.97 GB remaining at the displayed timestamp |
+| Neon history / network transfer | 0.01 GB / 0 GB | Dashboard-reported rounded usage |
+| Neon project / branch count | 1 project, 1 of 10 branches | Existing unrelated resources were not reused |
+| Neon object storage | `search-images`, Private | Actual byte usage was not displayed; remaining object-storage quota is unverified |
+| Neon Functions | `api` deployment Completed, `search-sweep` trigger present | Active-hour consumption was not displayed; remaining Functions quota is unverified |
+| Cloudflare Workers account requests | 0 / 100,000 today | This is the Workers counter, not static Pages visitors |
+| Cloudflare observability events | 0 / 200,000 today | Dashboard counter |
+| Cloudflare CPU / Workers build minutes | 0 ms / 0 minutes | Dashboard counter; does not establish monthly Pages build allowance |
+| Cloudflare Pages deployments | 2 visible deployments | Initial direct upload and verified GitHub Actions upload |
+| Pages Metrics, last 24 hours | Requests success 0, errors 0; no data available | Function-oriented metrics; static Web Analytics is disabled and was left unchanged |
+
+Neon explicitly warns that metrics may lag by one hour and may not update for inactive projects. These rounded values are observations, not instantaneous metering. Cloudflare did not expose a verified remaining monthly Pages-build count in the inspected dashboards; no zero-usage or 500-build-remaining assumption is made. OpenAI historical expenditure and LIVE search cost remain separately tracked release prerequisites.

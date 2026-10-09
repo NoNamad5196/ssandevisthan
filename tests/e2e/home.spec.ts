@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { waitForArtwork } from './readiness';
 
 const captures = resolve('test-results/visual');
 const viewports = [
@@ -21,14 +22,7 @@ for (const viewport of viewports) {
       if (/\/(artwork|fonts)\//.test(response.url()) && !response.ok()) missingAssets.push(response.url());
     });
     await page.goto('/');
-    await page.evaluate(async () => {
-      await Promise.all([
-        document.fonts.load('700 24px "Gmarket Sans"'),
-        document.fonts.load('500 16px Pretendard'),
-        ...Array.from(document.images, image => image.decode()),
-      ]);
-      await document.fonts.ready;
-    });
+    await waitForArtwork(page);
     await expect(page.getByRole('button', { name: '사진 올리기', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: '찾고 싶은 옷 사진을 올려주세요' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: '핫딜 상품 검색' })).toBeVisible();

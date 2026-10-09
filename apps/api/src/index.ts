@@ -10,6 +10,7 @@ import {normalizeImage,validateImage} from './images.ts';
 import {NodePinnedTransport,resolver} from './transport.ts';
 import {waitUntil} from '@neon/functions';
 import {diagnostics} from './diagnostics.ts';
+import {maintenancePrelude,maintenanceCompleted,sweepOrphans} from './maintenance.ts';
 
 const database=new NeonDatabase();
 configureRuntime({database,owner:verifyOwner,env:name=>process.env[name],waitUntil,async wakeWorker(){
@@ -24,11 +25,14 @@ async function schedule(req:Request):Promise<Response>{
   // Neon strips client X-Neon-* headers (official scheduled-trigger contract).
   // Also require an independent secret path and a transactional minute dedupe.
   if(!req.headers.get('x-neon-trigger-invocation-id')||marker.length<32||new URL(req.url).pathname!==`/internal/schedule/${marker}`||req.method!=='POST')return new Response(null,{status:404});
+  const activity=await maintenancePrelude();const orphansRemoved=await sweepOrphans(activity.active);
+  if(!activity.active)return Response.json({ok:true,idle:true,orphansRemoved});
   const admitted=await pool.query(`INSERT INTO public.schedule_ticks(minute) VALUES(date_trunc('minute',now())) ON CONFLICT DO NOTHING RETURNING minute`);
   if(!admitted.rowCount)return Response.json({ok:true,reused:true});
   const internal=new Request(new URL('/internal/sweep',req.url),{method:'POST',headers:{'x-internal-secret':process.env.INTERNAL_WORKER_SECRET??''}});
   const response=await handleSweep(internal);
   await pool.query(`DELETE FROM public.schedule_ticks WHERE minute<now()-interval '1 day'; DELETE FROM auth.creation_events WHERE created_at<now()-interval '10 minutes'; DELETE FROM auth.anonymous_sessions WHERE expires_at<now();`);
+  if(response.ok)await maintenanceCompleted(activity.due);
   return response;
 }
 export default {async fetch(req:Request):Promise<Response>{

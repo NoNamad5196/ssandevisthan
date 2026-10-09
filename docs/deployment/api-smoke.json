@@ -1,0 +1,83 @@
+{
+  "at": "2026-10-09T08:43:49.133Z",
+  "environment": "LIVE_NEON",
+  "providerCalls": 0,
+  "productSearchSuccess": false,
+  "checks": [
+    {
+      "name": "two real anonymous sessions",
+      "pass": true
+    },
+    {
+      "name": "distinct owners",
+      "pass": true
+    },
+    {
+      "name": "CORS production origin",
+      "pass": true
+    },
+    {
+      "name": "create upload",
+      "pass": true,
+      "status": 201
+    },
+    {
+      "name": "cross-owner write denied",
+      "pass": true,
+      "status": 404
+    },
+    {
+      "name": "normalize and private S3 write",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "same binary retry stable",
+      "pass": true
+    },
+    {
+      "name": "finalize hash verified",
+      "pass": true
+    },
+    {
+      "name": "cross-owner finalize denied",
+      "pass": true
+    },
+    {
+      "name": "private normalized object exists",
+      "pass": true
+    },
+    {
+      "name": "unsigned storage read denied",
+      "pass": true,
+      "status": 403
+    },
+    {
+      "name": "unknown spend blocks paid search",
+      "pass": true,
+      "status": 503,
+      "code": "TEMPORARILY_UNAVAILABLE"
+    },
+    {
+      "name": "live refresh preserves owner",
+      "pass": true
+    },
+    {
+      "name": "delete upload accepted",
+      "pass": true
+    },
+    {
+      "name": "delete hides immediately",
+      "pass": true
+    },
+    {
+      "name": "live cleanup dispatcher",
+      "pass": true,
+      "status": 200
+    },
+    {
+      "name": "private object physically removed",
+      "pass": true
+    }
+  ]
+}

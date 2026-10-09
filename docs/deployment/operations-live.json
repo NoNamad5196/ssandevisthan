@@ -1,0 +1,40 @@
+{
+  "observedAt": "2026-10-09T08:35:56.300Z",
+  "environment": "LIVE_NEON_AGGREGATES",
+  "observationWindow": "last 24 hours unless stated",
+  "runs": [],
+  "queue": {
+    "ready": 0,
+    "leased": 0,
+    "oldest_seconds": 0,
+    "expired_leases": 0
+  },
+  "providers": [],
+  "gates": [],
+  "rejections": [],
+  "retention": {
+    "overdue_upload_rows": 0,
+    "expired_snapshot_rows": 0,
+    "overdue_cleanup_tasks": 0,
+    "oldest_cleanup_delay_seconds": 0
+  },
+  "budget": {
+    "enabled": false,
+    "ceiling_microusd": "20000000",
+    "spent_microusd": "0",
+    "reserved_search_microusd": "0",
+    "available_microusd": null,
+    "history_verified_at": null,
+    "rates_verified_at": null,
+    "model_verified_at": null,
+    "free_quota_verified_at": null
+  },
+  "schedule": {
+    "last_active_database_sweep": "2026-10-09T08:35:00.000Z"
+  },
+  "limitations": [
+    "Storage objects require the separate orphan sweep check.",
+    "Idle schedules intentionally avoid PostgreSQL; the last active sweep is not the last trigger invocation.",
+    "No paid-search or quality success follows from infrastructure aggregates."
+  ]
+}

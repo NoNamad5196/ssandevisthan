@@ -1,7 +1,7 @@
 import {Pool,types} from 'pg';
 import {S3Client,GetObjectCommand,PutObjectCommand,DeleteObjectCommand} from '@aws-sdk/client-s3';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
-import {AppError,type DatabaseDriver,type Row} from '../../../supabase/shared/runtime.ts';
+import {AppError,sha256,type DatabaseDriver,type Row} from '../../../supabase/shared/runtime.ts';
 
 types.setTypeParser(20,value=>{const n=Number(value);if(!Number.isSafeInteger(n))throw new Error('BIGINT_OVERFLOW');return n;});
 export const pool=new Pool({connectionString:process.env.DATABASE_URL,max:5,idleTimeoutMillis:10000,connectionTimeoutMillis:5000,statement_timeout:8000});
@@ -27,8 +27,12 @@ export function sqlFilter(query:string,values:unknown[]=[]):{where:string;tail:s
   if(params.has('limit'))tail+=` LIMIT ${Number(params.get('limit'))}`;
   return{where:clauses.length?' WHERE '+clauses.join(' AND '):'',tail,values};
 }
-const s3=new S3Client({region:process.env.AWS_REGION??'us-east-1',endpoint:process.env.AWS_ENDPOINT_URL_S3,forcePathStyle:true});
-const bucket=process.env.INPUT_BUCKET??'normalized-inputs';
+export const s3=new S3Client({region:process.env.AWS_REGION??'us-east-1',endpoint:process.env.AWS_ENDPOINT_URL_S3,forcePathStyle:true});
+export const bucket=process.env.INPUT_BUCKET??'normalized-inputs';
+let markedMinute=0;
+export async function markActivity(){const minute=Math.floor(Date.now()/60000)*60000;if(markedMinute===minute)return;
+  await s3.send(new PutObjectCommand({Bucket:bucket,Key:`_runtime/hot/${minute}`,Body:'1',ContentType:'text/plain'}),{abortSignal:AbortSignal.timeout(8000)});markedMinute=minute;
+}
 function keyCheck(key:string){if(!/^[a-f0-9-]{36}\/[a-f0-9-]{36}\/normalized\.webp$/.test(key))throw new AppError('INVALID_INPUT',400);}
 async function checkedQuery(text:string,values:unknown[]=[]){try{return await pool.query(text,values);}catch(e:any){throw new AppError(typeof e.message==='string'&&/^[A-Z_]+$/.test(e.message)?e.message:'TEMPORARILY_UNAVAILABLE',503,true);}}
 export class NeonDatabase implements DatabaseDriver {
@@ -37,6 +41,9 @@ export class NeonDatabase implements DatabaseDriver {
   async insert(table:string,row:Row){const keys=Object.keys(row);const result=await checkedQuery(`INSERT INTO ${tableName(table)}(${keys.map(identifier).join(',')}) VALUES(${keys.map((_,i)=>`$${i+1}`).join(',')}) RETURNING *`,Object.values(row));return normalize(result.rows[0]);}
   async patch(table:string,query:string,row:Row){const keys=Object.keys(row),f=sqlFilter(query,Object.values(row));if(!f.where||f.tail)throw new AppError('INVALID_INPUT',400);return normalize((await checkedQuery(`UPDATE ${tableName(table)} SET ${keys.map((k,i)=>`${identifier(k)}=$${i+1}`).join(',')}${f.where} RETURNING *`,f.values)).rows);}
   async rpc(name:string,args:Row={}){
+    // Durable wake marker is written before admission; a missed worker hint or
+    // isolate eviction cannot leave an accepted job invisible to the scheduler.
+    if(name==='create_upload'||name==='accept_search')await markActivity();
     const call=`public.${identifier(name)}(${Object.keys(args).map((key,i)=>`${identifier(key)}=>$${i+1}`).join(',')})`;
     const setof=['claim_search_job','claim_cleanup'].includes(name);
     const r=await checkedQuery(setof?`SELECT * FROM ${call}`:`SELECT ${call} AS result`,Object.values(args));return normalize(setof?r.rows:r.rows[0]?.result);
@@ -45,7 +52,10 @@ export class NeonDatabase implements DatabaseDriver {
     if(!r.Body||!r.ContentLength||r.ContentLength>10000000)throw new AppError('UPLOAD_NOT_READY',409);
     const bytes=await r.Body.transformToByteArray();if(bytes.length>10000000)throw new AppError('IMAGE_TOO_LARGE',413);return bytes;
   }
-  async storagePut(key:string,bytes:Uint8Array){keyCheck(key);if(bytes.length>10000000)throw new AppError('IMAGE_TOO_LARGE',413);await s3.send(new PutObjectCommand({Bucket:bucket,Key:key,Body:bytes,ContentType:'image/webp',CacheControl:'private, no-store'}),{abortSignal:AbortSignal.timeout(8000)});}
+  async storagePut(key:string,bytes:Uint8Array){keyCheck(key);if(bytes.length>10000000)throw new AppError('IMAGE_TOO_LARGE',413);
+    try{await s3.send(new PutObjectCommand({Bucket:bucket,Key:key,Body:bytes,ContentType:'image/webp',CacheControl:'private, no-store',IfNoneMatch:'*'}),{abortSignal:AbortSignal.timeout(8000)});}
+    catch(e:any){if(e?.$metadata?.httpStatusCode!==412)throw e;const existing=await this.storageGet(key);if(await sha256(existing)!==await sha256(bytes))throw new AppError('UPLOAD_CONTENT_CHANGED',409);}
+  }
   async storageDelete(key:string){keyCheck(key);await s3.send(new DeleteObjectCommand({Bucket:bucket,Key:key}),{abortSignal:AbortSignal.timeout(8000)});}
   async signedInput(key:string,seconds:number){keyCheck(key);return getSignedUrl(s3,new GetObjectCommand({Bucket:bucket,Key:key}),{expiresIn:Math.max(1,Math.min(20,seconds))});}
 }

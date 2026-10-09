@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import pg from 'pg';
 const root=resolve(import.meta.dirname,'../..');
 if(!process.env.DATABASE_URL)throw new Error('DATABASE_URL_REQUIRED');
-const files=['deploy/neon/000_bootstrap.sql','supabase/migrations/202610090001_v3_schema.sql','supabase/migrations/202610090002_transactions.sql','supabase/migrations/202610090003_evidence_and_recovery.sql','supabase/migrations/202610090004_upload_limits.sql','deploy/neon/004_runtime.sql'];
+const files=['deploy/neon/000_bootstrap.sql','supabase/migrations/202610090001_v3_schema.sql','supabase/migrations/202610090002_transactions.sql','supabase/migrations/202610090003_evidence_and_recovery.sql','supabase/migrations/202610090004_upload_limits.sql','deploy/neon/004_runtime.sql','supabase/migrations/202610090005_dynamic_escrow.sql'];
 const client=new pg.Client({connectionString:process.env.DATABASE_URL});await client.connect();
 try{
   await client.query('BEGIN');

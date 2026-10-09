@@ -18,7 +18,7 @@ type Option = { id: string; size: string; price?: number; stock?: number; disabl
 type Overrides = {
   info?: Record<string, unknown>; metadata?: Record<string, unknown>; product?: Record<string, unknown>; offer?: Record<string, unknown>;
   rows?: Record<string, string>; options?: Option[]; axis?: string; secondAxis?: boolean; dispatch?: string;
-  delivery?: string; visibleTitle?: string; extra?: string; directDiscountProof?: string;
+  delivery?: string; visibleTitle?: string; extra?: string; directDiscountProof?: string; pricePanel?: string;
 };
 const li = (option: Option) => `<li class="${option.disabled ? 'disabled' : ''}" data-stckno="${option.id}" data-dtloptnm="${option.size}" data-stckqty="${option.stock ?? 3}" data-price="${option.price ?? price}" data-addprc="${option.extra ?? 0}" data-minaddprc="0" data-maxaddprc="0"><dt>${option.label ?? '판매가'}</dt><span class="num value">${option.visiblePrice ?? option.price ?? price}</span></li>`;
 function page(overrides: Overrides = {}) {
@@ -31,6 +31,7 @@ function page(overrides: Overrides = {}) {
     <script type="application/ld+json">${JSON.stringify(product)}</script>
     ${overrides.directDiscountProof ?? `<script>fetch(\`/products/v1/pc/products/max-discount\`, {body: JSON.stringify({productNo: ${id}, sellerDirectDiscountAmount: 2200})});</script>`}
     <div class="c_product_info_title"><em class="title_sub">${overrides.dispatch ?? '국내발송'}</em><h1>${overrides.visibleTitle ?? title}</h1></div>
+    ${overrides.pricePanel ?? `<div class="b_product_info_price b_product_info_price_style2"><span>${price}원</span></div>`}
     <table>${Object.entries(rows).map(([key, value]) => `<tr><th>${key}</th><td>${value}</td></tr>`).join('')}</table>
     <input name="botOptTitle" value="${overrides.axis ?? '사이즈'}">${overrides.secondAxis ? '<input name="botOptTitle" value="색상">' : ''}
     <ul class="bot_typ_01">${(overrides.options ?? [{ id: '123', size: 'M' }, { id: '456', size: 'L' }]).map(li).join('')}</ul>
@@ -91,6 +92,18 @@ describe('11st public size adapter — SYNTHETIC merchant fragments', () => {
     expect(result.variantKey).toBe('123');
     expect(result.itemPrice).toBe(price);
     expect(() => parseElevenstProduct(page({ metadata: { is_sale: true }, options: [{ id: '123', size: 'M', stock: 0 }] }), pageUrl)).toThrow('OUT_OF_STOCK');
+  });
+  it.each([
+    '<p class="text_em_lg">현재 판매중인 상품이 아닙니다.</p>',
+    '<div class="price-help"><span>일반 안내</span></div><p class="text_em_lg">현재 판매 중인 상품이 아닙니다.</p>',
+  ])('rejects current buybox sale-stopped notices despite stale InStock and positive option quantity', (notice) => {
+    expect(() => parseElevenstProduct(page({ pricePanel: `<div class="b_product_info_price b_product_info_price_style2">${notice}</div>` }), pageUrl)).toThrow('OUT_OF_STOCK');
+  });
+  it('does not borrow sale-stopped notices from recommendations or unexecuted templates', () => {
+    const stopped = '<p class="text_em_lg">현재 판매중인 상품이 아닙니다.</p>';
+    const pricePanel = `<div class="b_product_info_price"><script>const unrelated = '${stopped}';</script><template>${stopped}</template><span>${price}원</span></div>`;
+    const extra = `<aside><div class="b_product_info_price">${stopped}</div></aside>`;
+    expect(parseElevenstProduct(page({ pricePanel, extra }), pageUrl).itemPrice).toBe(price);
   });
   it('requires matching merchant CDN image evidence for the same product ID', () => {
     expect(() => parseElevenstProduct(page({ product: { image: ['https://cdn.011st.com/a.webp'] } }), pageUrl)).toThrow('AMBIGUOUS_IMAGE');

@@ -22,7 +22,7 @@ describe('v3 PostgreSQL migrations and guarded transactions (local PostgreSQL)',
       const sql=await readFile(new URL(file,directory),'utf8');
       try{await db.exec(sql);}catch(e:any){throw new Error(`${file}: ${e.message}; position=${e.position}; internal=${e.internalPosition}; context=${e.where}; SQL=${sql.slice(Math.max(0,Number(e.position)-160),Number(e.position)+160)}`);}
     }
-    await db.exec(`update public.pilot_budget set enabled=true,history_verified_at=now(),rates_verified_at=now(),model_verified_at=now(),free_quota_verified_at=now(),rates='{}',search_ceiling_microusd=1000000;`);
+    await db.exec(`update public.pilot_budget set enabled=true,history_verified_at=now(),rates_verified_at=now(),model_verified_at=now(),free_quota_verified_at=now(),rates='{}',search_ceiling_microusd=1000000,minimum_search_reservation_microusd=100000;`);
   },60000);
   afterAll(async()=>{await db?.close();});
   async function upload(owner=ownerA){
@@ -85,5 +85,46 @@ describe('v3 PostgreSQL migrations and guarded transactions (local PostgreSQL)',
     await expect(accept(await upload())).rejects.toThrow('TEMPORARILY_UNAVAILABLE');expect(await count('search_runs')).toBe(before);
     await db.exec(`update pilot_budget set history_verified_at=now(),spent_microusd=19999999;`);
     await expect(accept(await upload())).rejects.toThrow('BUDGET_LIMITED');expect(await count('search_runs')).toBe(before);
+  });
+  it('an unverified admission floor blocks before consuming an upload',async()=>{
+    await db.exec(`delete from request_rate_events; update pilot_budget set spent_microusd=50000,minimum_search_reservation_microusd=null;`);
+    const id=await upload(),before=await count('search_runs');
+    await expect(accept(id)).rejects.toThrow('TEMPORARILY_UNAVAILABLE');expect(await count('search_runs')).toBe(before);
+    expect((await db.query<any>('select status from upload_sessions where id=$1',[id])).rows[0]!.status).toBe('READY');
+    await db.exec(`update pilot_budget set minimum_search_reservation_microusd=11000000,search_ceiling_microusd=20000000;`);
+  });
+  it('reserves remaining cumulative balance and serializes competing admissions without double allocation',async()=>{
+    const idA=await upload(),idB=await upload(ownerB);
+    const results=await Promise.allSettled([accept(idA),accept(idB,crypto.randomUUID(),ownerB)]);
+    expect(results.filter(r=>r.status==='fulfilled')).toHaveLength(1);
+    const rejected=results.find(r=>r.status==='rejected') as PromiseRejectedResult;expect(rejected.reason.message).toContain('BUDGET_LIMITED');
+    const a=(results.find(r=>r.status==='fulfilled') as PromiseFulfilledResult<any>).value;
+    const top=(await db.query<any>(`select * from budget_reservations where search_id=$1 and operation_key='SEARCH'`,[a.run.id])).rows[0]!;
+    expect(Number(top.reserved_microusd)).toBe(19950000);
+    // Response-loss retries still return the accepted run even if admission is subsequently disabled.
+    await db.exec('update pilot_budget set enabled=false;');
+    const retry=await accept(a.input.uploadId,a.key,a.run.owner_id);expect(retry.reused).toBe(true);expect(retry.run.id).toBe(a.run.id);
+    await db.exec('update pilot_budget set enabled=true;');await cancel(a.run.id,a.run.owner_id);
+  });
+  it('durable settlement releases child headroom while unknown outcomes retain their entire escrow',async()=>{
+    await db.exec('delete from request_rate_events;');const a=await accept(await upload());
+    const first=(await db.query<any>('select * from claim_search_job()')).rows[0]!;
+    await db.query('select reserve_provider($1,$2,$3,$4,$5,$6)',[first.id,first.lease_token,first.attempt,'discovery','discovery:1',11000000]);
+    await expect(db.query('select reserve_provider($1,$2,$3,$4,$5,$6)',[first.id,first.lease_token,first.attempt,'discovery','discovery:2',11000000])).rejects.toThrow('BUDGET_LIMITED');
+    const settlement={p_search:a.run.id,p_key:'discovery:1',p_actual:25000,p_units:{fixture:true},p_request_id:'fixture-known',p_latency:1,p_error:null};
+    await db.query('select commit_search_step($1,$2,$3,$4)',[first.id,first.lease_token,first.attempt,JSON.stringify({settlements:[settlement],nextJobs:[{key:'discovery:next',stage:'DISCOVERING'}]})]);
+    const second=(await db.query<any>('select * from claim_search_job()')).rows[0]!;
+    expect(second.operation_key).toBe('discovery:next');
+    await db.query('select reserve_provider($1,$2,$3,$4,$5,$6)',[second.id,second.lease_token,second.attempt,'discovery','discovery:2',11000000]);
+    await db.query('select settle_provider($1,$2,$3,$4,$5,$6,$7)',[a.run.id,'discovery:2',null,'{}','fixture-unknown',1,'PROVIDER_TIMEOUT']);
+    await expect(db.query('select reserve_provider($1,$2,$3,$4,$5,$6)',[second.id,second.lease_token,second.attempt,'discovery','discovery:2',11000000])).rejects.toThrow('PROVIDER_OUTCOME_UNKNOWN');
+    await expect(db.query('select reserve_provider($1,$2,$3,$4,$5,$6)',[second.id,second.lease_token,second.attempt,'discovery','discovery:3',11000000])).rejects.toThrow('BUDGET_LIMITED');
+    await cancel(a.run.id);
+    expect((await db.query<any>(`select state from budget_reservations where search_id=$1 and operation_key='SEARCH'`,[a.run.id])).rows[0]!.state).toBe('RESERVED');
+    await expect(accept(await upload(ownerB),crypto.randomUUID(),ownerB)).rejects.toThrow('BUDGET_LIMITED');
+    // Explicit known fixture reconciliation releases exactly once; no automatic refund.
+    await db.query('select settle_provider($1,$2,$3,$4,$5,$6,$7)',[a.run.id,'discovery:2',30000,'{}','fixture-reconciled',1,null]);
+    await db.query('select close_search_budget($1)',[a.run.id]);await db.query('select close_search_budget($1)',[a.run.id]);
+    expect(Number((await db.query<any>('select spent_microusd from pilot_budget')).rows[0]!.spent_microusd)).toBe(105000);
   });
 });

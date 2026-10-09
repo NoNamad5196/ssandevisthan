@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-09T08:43:45.657Z",
+  "status": 200,
+  "body": {
+    "service": "SSANDEVISTHAN",
+    "schemaVersion": 3,
+    "backend": "neon",
+    "searchEnabled": false
+  }
+}

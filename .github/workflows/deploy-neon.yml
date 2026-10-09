@@ -1,0 +1,77 @@
+name: Deploy verified backend
+
+on:
+  workflow_run:
+    workflows: [Verify application]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: deploy-neon-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Require verified current main
+        id: allowed
+        run: node deploy/neon/guard-current.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - if: steps.allowed.outputs.deploy == 'true'
+        run: npm ci
+      - if: steps.allowed.outputs.deploy == 'true'
+        run: npm run typecheck --workspace @ssandevisthan/api
+      - if: steps.allowed.outputs.deploy == 'true'
+        run: node deploy/neon/build.mjs
+      - name: Recheck current main before changing the backend
+        if: steps.allowed.outputs.deploy == 'true'
+        id: current
+        run: node deploy/neon/guard-current.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Apply only checksummed transactional migrations
+        if: steps.current.outputs.deploy == 'true'
+        run: node deploy/neon/migrate.mjs
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      - name: Deploy with persistent server settings
+        if: steps.current.outputs.deploy == 'true'
+        run: |
+          node deploy/neon/deploy.mjs deploy
+          node deploy/neon/deploy.mjs trigger
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_BACKEND_ENV_JSON: ${{ secrets.NEON_BACKEND_ENV_JSON }}
+      - name: Verify public HTTPS backend health and preserved paid-execution flag
+        if: steps.current.outputs.deploy == 'true'
+        run: |
+          node --input-type=module <<'JS'
+          const settings=JSON.parse(process.env.NEON_BACKEND_ENV_JSON);
+          const response=await fetch(settings.PUBLIC_API_URL+'/health',{signal:AbortSignal.timeout(15000)});
+          const data=await response.json();
+          if(!response.ok||data.service!=='SSANDEVISTHAN'||data.schemaVersion!==3||data.backend!=='neon'||data.searchEnabled!==(settings.PAID_EXECUTION_ENABLED==='true'))throw new Error('BACKEND_HEALTH_CHECK_FAILED');
+          console.info('Public HTTPS health passed; paid-execution setting preserved.');
+          JS
+        env:
+          NEON_BACKEND_ENV_JSON: ${{ secrets.NEON_BACKEND_ENV_JSON }}

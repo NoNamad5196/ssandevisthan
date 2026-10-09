@@ -4,6 +4,7 @@ import { AppError, boundedBody, env } from './runtime.ts';
 export interface SafeResponse {url:string;status:number;headers:Headers;bytes:Uint8Array}
 export interface PinnedTransport {get(url:URL,ip:string,signal:AbortSignal,cap:number):Promise<SafeResponse>}
 export interface Resolver {resolve(host:string):Promise<string[]>}
+export interface SourceGuard {enter(host:string):Promise<(()=>Promise<void>)|null>}
 let fetchAdapter:{resolver:Resolver;transport:PinnedTransport}|null=null;
 export function configureSafeFetcher(adapter:NonNullable<typeof fetchAdapter>){fetchAdapter=adapter;}
 function abortBound<T>(promise:Promise<T>,signal:AbortSignal,late?:(value:T)=>void):Promise<T>{
@@ -74,7 +75,7 @@ const dnsResolver:Resolver={async resolve(host){
   return results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
 }};
 export class SafeFetcher{
-  constructor(private resolver:Resolver=fetchAdapter?.resolver??dnsResolver,private transport:PinnedTransport=fetchAdapter?.transport??new DenoPinnedTransport()){}
+  constructor(private resolver:Resolver=fetchAdapter?.resolver??dnsResolver,private transport:PinnedTransport=fetchAdapter?.transport??new DenoPinnedTransport(),private guard?:SourceGuard){}
   async get(input:string,kind:'html'|'image',deadline:number):Promise<SafeResponse>{
     let url=new URL(input);const cap=kind==='html'?2000000:10000000;
     const remaining=Math.min(8000,deadline-Date.now()-2000);if(remaining<=0)throw new AppError('TIMEOUT',504);
@@ -83,7 +84,11 @@ export class SafeFetcher{
       try{url=validatePublicHttpsUrl(url.href);}catch{throw new AppError('SSRF_BLOCKED',400);}
       const addresses=await abortBound(this.resolver.resolve(url.hostname),signal);
       if(!addresses.length||addresses.some(ip=>!isPublicIpAddress(ip)))throw new AppError('SSRF_BLOCKED',400);
-      const response=await abortBound(this.transport.get(url,addresses[0],signal,cap),signal);
+      const release=this.guard?await abortBound(this.guard.enter(url.hostname),signal,fn=>{void fn?.().catch(()=>{});}):undefined;
+      if(release===null)throw new AppError('SOURCE_BUSY',503,true);
+      let response:SafeResponse;
+      try{response=await abortBound(this.transport.get(url,addresses[0],signal,cap),signal);}
+      finally{if(release)await abortBound(release(),signal).catch(()=>{});}
       if(response.status===403)throw new AppError('BLOCKED',403);
       if(response.status===429)throw new AppError('RATE_LIMITED',429);
       if([301,302,303,307,308].includes(response.status)){

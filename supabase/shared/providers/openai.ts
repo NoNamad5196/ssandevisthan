@@ -1,6 +1,6 @@
 import { AnalysisOutputSchema,ComparisonOutputSchema,ATTRIBUTE_VOCABULARY } from '@ssandevisthan/contracts';
 import { canonicalizeProductUrl,validatePublicHttpsUrl } from '@ssandevisthan/search-core';
-import {AppError,Database,boundedBody,env,required,type Row} from '../runtime.ts';
+import {AppError,Database,boundedBody,env,required,sha256,type Row} from '../runtime.ts';
 
 export const OPENAI_MODEL='gpt-6.1-sol';
 const object=(properties:Row)=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
@@ -13,23 +13,105 @@ const visualAxis=object({targetApplicable:{type:'boolean'},ordinal:{anyOf:[{type
 export const analysisJsonSchema=object({supported:{type:'boolean'},ambiguousTarget:{type:'boolean'},targetAnalysis:attributes('INPUT_IMAGE'),generatedQueries:{type:'array',items:{type:'string'},minItems:4,maxItems:8}});
 export const comparisonJsonSchema=object({candidates:{type:'array',minItems:1,maxItems:5,items:object({candidateId:{type:'string'},attributes:attributes('MERCHANT_IMAGE'),
   visual:object({silhouette:visualAxis,color:visualAxis,graphic:visualAxis,detail:visualAxis}),matchedAttributes:stringArray,differentAttributes:stringArray,unknownAttributes:stringArray})}});
-export interface RateConfig {model:string;inputMicrousdPerMillion:number;cachedInputMicrousdPerMillion:number;outputMicrousdPerMillion:number;
+/** A trusted server implementation automatically bounds the exact request,
+ * including every billed pass, image, schema and hosted-tool content. */
+export interface InputBoundVerifier {
+  verify(serializedRequest:string,operation:string):Promise<{requestSha256:string;maxBilledInputTokens:number;profileVersion:string}>;
+}
+export interface RateConfig {model:string;serviceTier:'default';processing:'global';inputMicrousdPerMillion:number;cachedInputMicrousdPerMillion:number;cacheWriteMicrousdPerMillion:number;outputMicrousdPerMillion:number;
   webSearchMicrousdPerCall:number;operations:Record<string,{maxInputTokens:number;maxOutputTokens:number;maxToolCalls:number}>;version:string}
+// Official gpt-6.1-sol model/pricing documents checked 2026-10-09. These are
+// billing rules, not a proof that any configured input cap is enforceable.
+const LONG_CONTEXT_THRESHOLD=272000;
+export const CONTEXT_BOUND_PROFILE='gpt-6.1-sol-stateless-context-v1-2026-10-09';
+export const MODEL_CONTEXT_TOKENS=1_050_000;
+const configError=()=>new AppError('COST_CONFIGURATION_UNVERIFIED',503);
+function record(value:unknown):value is Row{return!!value&&typeof value==='object'&&!Array.isArray(value);}
+function exactKeys(value:unknown,keys:string[]):value is Row{return record(value)&&Object.keys(value).length===keys.length&&Object.keys(value).every(k=>keys.includes(k));}
+function boundedText(value:unknown,max:number):value is string{return typeof value==='string'&&value.length>0&&value.length<=max;}
+/** Derived engineering bound: with finite context C, no continuing conversation,
+ * no compaction/subagents/Pro, and K<=1 processed hosted calls, the model has the
+ * initial pass plus at most K tool-return passes. Each pass fits C including
+ * image/schema/tool tokens. Reserve C*(1+K), not the smaller low-search hint.
+ * Output (including reasoning) is separately capped for the entire response.
+ * See docs/openai-cost-verification.md for official premises and excluded cases. */
+export const conservativeContextVerifier:InputBoundVerifier={async verify(serializedRequest,operation){
+  let request:unknown;try{request=JSON.parse(serializedRequest);}catch{throw configError();}
+  const discovery=operation==='discovery',visual=operation==='analysis'||operation==='comparison';
+  if(!discovery&&!visual)throw configError();
+  const common=['instructions','input','model','store','service_tier','truncation','reasoning','max_output_tokens','max_tool_calls','parallel_tool_calls'];
+  if(!exactKeys(request,[...common,...(discovery?['tools','tool_choice','include']:['text'])])||request.model!==OPENAI_MODEL||request.store!==false||
+    request.service_tier!=='default'||request.truncation!=='disabled'||request.parallel_tool_calls!==false||
+    !exactKeys(request.reasoning,['effort'])||request.reasoning.effort!=='low'||
+    !Number.isSafeInteger(request.max_output_tokens)||request.max_output_tokens<16||request.max_output_tokens>128000||
+    request.max_tool_calls!==(discovery?1:0)||!boundedText(request.instructions,10000))throw configError();
+  // Exact allowlists exclude previous_response_id, conversation, background,
+  // context_management, multi_agent, prompt templates, custom/MCP tools and any
+  // future feature that could introduce additional billed inference passes.
+  if(!Array.isArray(request.input)||request.input.length!==1||!exactKeys(request.input[0],['role','content'])||request.input[0].role!=='user')throw configError();
+  const content=request.input[0].content;
+  if(!Array.isArray(content)||(discovery&&content.length!==1)||(operation==='analysis'&&content.length!==2)||
+    (operation==='comparison'&&(content.length<4||content.length>12||content.length%2!==0)))throw configError();
+  for(let i=0;i<content.length;i++){
+    const item=content[i];
+    if(discovery||i%2===0){if(!exactKeys(item,['type','text'])||item.type!=='input_text'||!boundedText(item.text,4096))throw configError();}
+    else if(!exactKeys(item,['type','image_url','detail'])||item.type!=='input_image'||item.detail!=='high'||!boundedText(item.image_url,15_000_000)||
+      !(/^https:\/\//.test(item.image_url)||/^data:image\/webp;base64,[A-Za-z0-9+/]+={0,2}$/.test(item.image_url)))throw configError();
+  }
+  if(discovery){
+    if(request.tool_choice!=='required'||!Array.isArray(request.tools)||request.tools.length!==1||
+      !exactKeys(request.tools[0],['type','search_context_size'])||request.tools[0].type!=='web_search'||request.tools[0].search_context_size!=='low'||
+      JSON.stringify(request.include)!==JSON.stringify(['web_search_call.action.sources','web_search_call.results']))throw configError();
+  }else{
+    const format=request.text?.format;
+    if(!exactKeys(request.text,['format'])||!exactKeys(format,['type','name','strict','schema'])||format.type!=='json_schema'||format.strict!==true||
+      format.name!==(operation==='analysis'?'clothing_analysis_v3':'clothing_comparison_v3')||
+      JSON.stringify(format.schema)!==JSON.stringify(operation==='analysis'?analysisJsonSchema:comparisonJsonSchema))throw configError();
+  }
+  return{requestSha256:await sha256(serializedRequest),maxBilledInputTokens:MODEL_CONTEXT_TOKENS*(1+(discovery?1:0)),profileVersion:CONTEXT_BOUND_PROFILE};
+}};
+/** Server settings are written last; caller data cannot override enforced limits. */
+export function serializeProviderRequest(body:Row,cap:{maxOutputTokens:number;maxToolCalls:number}):string{
+  return JSON.stringify({...body,model:OPENAI_MODEL,store:false,service_tier:'default',truncation:'disabled',reasoning:{effort:'low'},max_output_tokens:cap.maxOutputTokens,max_tool_calls:cap.maxToolCalls,parallel_tool_calls:false});
+}
+function validateRates(rates:RateConfig){
+  if(rates.model!==OPENAI_MODEL||rates.serviceTier!=='default'||rates.processing!=='global'||!rates.version||
+    ![rates.inputMicrousdPerMillion,rates.cachedInputMicrousdPerMillion,rates.cacheWriteMicrousdPerMillion,rates.outputMicrousdPerMillion,rates.webSearchMicrousdPerCall].every(n=>Number.isSafeInteger(n)&&n>=0)||
+    rates.cachedInputMicrousdPerMillion>rates.inputMicrousdPerMillion||BigInt(rates.cacheWriteMicrousdPerMillion)*4n<BigInt(rates.inputMicrousdPerMillion)*5n)throw configError();
+}
+function costCeiling(inputCost:bigint,outputCost:bigint,toolCost:bigint,longContext:boolean):number|null{
+  // Half-microdollar numerator handles the 1.5x output premium exactly.
+  const numerator=inputCost*(longContext?4n:2n)+outputCost*(longContext?3n:2n);
+  const total=(numerator+1999999n)/2000000n+toolCost;
+  return total<=BigInt(Number.MAX_SAFE_INTEGER)?Number(total):null;
+}
 export function quoteCost(rates:RateConfig,operation:string):number{
+  validateRates(rates);
   const cap=rates.operations?.[operation];
-  if(rates.model!==OPENAI_MODEL||!rates.version||!cap||![rates.inputMicrousdPerMillion,rates.cachedInputMicrousdPerMillion,rates.outputMicrousdPerMillion,rates.webSearchMicrousdPerCall,cap.maxInputTokens,cap.maxOutputTokens,cap.maxToolCalls].every(n=>Number.isSafeInteger(n)&&n>=0)||rates.cachedInputMicrousdPerMillion>rates.inputMicrousdPerMillion||cap.maxInputTokens<1||cap.maxOutputTokens<16||cap.maxToolCalls>(operation==='discovery'?1:0))throw new AppError('COST_CONFIGURATION_UNVERIFIED',503);
+  if(!['analysis','discovery','comparison'].includes(operation)||!cap||![cap.maxInputTokens,cap.maxOutputTokens,cap.maxToolCalls].every(n=>Number.isSafeInteger(n)&&n>=0)||cap.maxInputTokens<1||cap.maxOutputTokens<16||cap.maxOutputTokens>128000||cap.maxToolCalls!==(operation==='discovery'?1:0))throw configError();
   // Compute the ceiling in integer arithmetic so large config values cannot silently
   // lose precision and reserve less than the stated maximum cost.
-  const tokenCost=BigInt(cap.maxInputTokens)*BigInt(rates.inputMicrousdPerMillion)+BigInt(cap.maxOutputTokens)*BigInt(rates.outputMicrousdPerMillion);
-  const worst=(tokenCost+999999n)/1000000n+BigInt(cap.maxToolCalls)*BigInt(rates.webSearchMicrousdPerCall);
-  if(worst>BigInt(Number.MAX_SAFE_INTEGER))throw new AppError('COST_CONFIGURATION_UNVERIFIED',503);
-  return Number(worst);
+  const worst=costCeiling(BigInt(cap.maxInputTokens)*BigInt(rates.cacheWriteMicrousdPerMillion),BigInt(cap.maxOutputTokens)*BigInt(rates.outputMicrousdPerMillion),BigInt(cap.maxToolCalls)*BigInt(rates.webSearchMicrousdPerCall),cap.maxInputTokens>LONG_CONTEXT_THRESHOLD);
+  if(worst===null)throw configError();return worst;
 }
 export function usageCost(rates:RateConfig,response:Row):{actual:number;units:Row}|null{
-  const u=response.usage;const input=u?.input_tokens,output=u?.output_tokens,cached=u?.input_tokens_details?.cached_tokens??0;
-  if(![input,output,cached].every(n=>Number.isSafeInteger(n)&&n>=0)||cached>input)return null;
-  const tools=Array.isArray(response.output)?response.output.filter((x:Row)=>x.type==='web_search_call').length:0;
-  return{actual:Math.ceil(((input-cached)*rates.inputMicrousdPerMillion+cached*rates.cachedInputMicrousdPerMillion+output*rates.outputMicrousdPerMillion)/1000000+tools*rates.webSearchMicrousdPerCall),units:{inputTokens:input,outputTokens:output,cachedInputTokens:cached,webSearchCalls:tools,model:OPENAI_MODEL,rateVersion:rates.version}};
+  try{validateRates(rates);}catch{return null;}
+  const u=response.usage;const input=u?.input_tokens,output=u?.output_tokens,cached=u?.input_tokens_details?.cached_tokens,written=u?.input_tokens_details?.cache_write_tokens;
+  if(![input,output,cached,written].every(n=>Number.isSafeInteger(n)&&n>=0)||BigInt(cached)+BigInt(written)>BigInt(input)||!Array.isArray(response.output)||response.service_tier!=='default'||response.model!==OPENAI_MODEL)return null;
+  if(response.output.some((x:Row)=>!['reasoning','message','web_search_call'].includes(x.type)))return null;
+  const tools=response.output.filter((x:Row)=>x.type==='web_search_call').length;
+  const inputCost=(BigInt(input)-BigInt(cached)-BigInt(written))*BigInt(rates.inputMicrousdPerMillion)+BigInt(cached)*BigInt(rates.cachedInputMicrousdPerMillion)+BigInt(written)*BigInt(rates.cacheWriteMicrousdPerMillion);
+  const actual=costCeiling(inputCost,BigInt(output)*BigInt(rates.outputMicrousdPerMillion),BigInt(tools)*BigInt(rates.webSearchMicrousdPerCall),input>LONG_CONTEXT_THRESHOLD);
+  if(actual===null)return null;
+  return{actual,units:{inputTokens:input,outputTokens:output,cachedInputTokens:cached,cacheWriteTokens:written,webSearchCalls:tools,model:OPENAI_MODEL,serviceTier:'default',processing:'global',longContext:input>LONG_CONTEXT_THRESHOLD,rateVersion:rates.version}};
+}
+/** No numerical cap, low-context hint, rate verification flag, or manual hash
+ * list can substitute for an automatic request verifier. */
+export async function requireVerifiedInputBound(rates:RateConfig,operation:string,serializedRequest:string,verifier?:InputBoundVerifier):Promise<string>{
+  const cap=rates.operations?.[operation];if(!cap||!verifier)throw configError();
+  const proof=await verifier.verify(serializedRequest,operation);const digest=await sha256(serializedRequest);
+  if(!proof||proof.requestSha256!==digest||!proof.profileVersion||!Number.isSafeInteger(proof.maxBilledInputTokens)||proof.maxBilledInputTokens<1||proof.maxBilledInputTokens>cap.maxInputTokens)throw configError();
+  return proof.profileVersion;
 }
 export function outputJson(response:Row):unknown{
   if(response.status!=='completed')throw new AppError('PROVIDER_INCOMPLETE',502);
@@ -53,22 +135,24 @@ const compareInstructions=`Compare only the target clothing against each exact c
 
 export class OpenAIProvider {
   readonly settlements:Row[]=[];
-  constructor(private db:Database,private job:Row,private run:Row,private deadline:number){}
+  constructor(private db:Database,private job:Row,private run:Row,private deadline:number,private inputBoundVerifier:InputBoundVerifier=conservativeContextVerifier){}
   private async call(operation:'analysis'|'discovery'|'comparison',body:Row,key:string):Promise<Row>{
     if(env('PAID_EXECUTION_ENABLED')!=='true'||env('OPENAI_MODEL',OPENAI_MODEL)!==OPENAI_MODEL)throw new AppError('PROVIDER_NOT_CONFIGURED',503);
     const apiKey=required('OPENAI_API_KEY');const b=await this.db.one('pilot_budget','id=eq.true');
     if(!b?.rates||!b?.rates_verified_at||!b?.history_verified_at||!b?.model_verified_at)throw new AppError('COST_CONFIGURATION_UNVERIFIED',503);
     const rates=b.rates as RateConfig;const worst=quoteCost(rates,operation),cap=rates.operations[operation];
+    const serializedRequest=serializeProviderRequest(body,cap);
+    const inputBoundProfile=await requireVerifiedInputBound(rates,operation,serializedRequest,this.inputBoundVerifier);
     const timeout=Math.min(16000,this.deadline-Date.now()-2000);if(timeout<100)throw new AppError('TIMEOUT',504);
     await this.db.rpc('reserve_provider',{p_job:this.job.id,p_token:this.job.lease_token,p_attempt:this.job.attempt,p_operation:operation,p_key:key,p_worst:worst});
     const started=Date.now();let requestId:string|null=null;
     try{
       const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${apiKey}`,'Content-Type':'application/json'},
-        body:JSON.stringify({model:OPENAI_MODEL,store:false,reasoning:{effort:'low'},max_output_tokens:cap.maxOutputTokens,max_tool_calls:cap.maxToolCalls,parallel_tool_calls:false,...body}),signal:AbortSignal.timeout(timeout)});
+        body:serializedRequest,signal:AbortSignal.timeout(timeout)});
       requestId=response.headers.get('x-request-id');
       if(!response.ok)throw new AppError(response.status===429?'PROVIDER_RATE_LIMITED':response.status===401||response.status===403?'PROVIDER_AUTH_FAILED':'PROVIDER_FAILED',502);
       const parsed=JSON.parse(new TextDecoder().decode(await boundedBody(response.body,2000000)));const usage=usageCost(rates,parsed);
-      this.settlements.push({p_search:this.run.id,p_key:key,p_actual:usage?.actual??null,p_units:usage?.units??{},p_request_id:requestId,p_latency:Date.now()-started,p_error:usage?null:'PROVIDER_USAGE_UNKNOWN'});
+      this.settlements.push({p_search:this.run.id,p_key:key,p_actual:usage?.actual??null,p_units:{...(usage?.units??{}),inputBoundProfile},p_request_id:requestId,p_latency:Date.now()-started,p_error:usage?null:'PROVIDER_USAGE_UNKNOWN'});
       if(!usage)throw new AppError('PROVIDER_USAGE_UNKNOWN',502);
       if(usage.actual>worst||usage.units.inputTokens>cap.maxInputTokens||usage.units.outputTokens>cap.maxOutputTokens||usage.units.webSearchCalls>cap.maxToolCalls){
         await this.db.patch('pilot_budget','id=eq.true',{enabled:false});throw new AppError('PROVIDER_CAP_EXCEEDED',502);

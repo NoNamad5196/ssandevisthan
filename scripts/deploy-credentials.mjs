@@ -5,9 +5,11 @@ import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const target = resolve('.secrets/neon.json');
+const secretFile = process.argv[2] ?? 'neon.json';
+if (!['neon.json', 'cloudflare.json'].includes(secretFile)) throw new Error('Unsupported deployment secret file');
+const target = resolve('.secrets', secretFile);
 const nonce = randomBytes(24).toString('hex');
-const allowed = ['NEON_API_KEY', 'DATABASE_URL', 'S3_ENDPOINT', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'];
+const allowed = secretFile === 'cloudflare.json' ? ['CLOUDFLARE_API_TOKEN'] : ['NEON_API_KEY', 'DATABASE_URL', 'S3_ENDPOINT', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'];
 const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
 let origin;
 const server = http.createServer(async (request, response) => {
@@ -17,7 +19,7 @@ const server = http.createServer(async (request, response) => {
   if (request.url !== `/${nonce}` || request.headers.host !== new URL(origin).host) { response.writeHead(404).end(); return; }
   if (request.method === 'GET') {
     response.setHeader('Content-Type', 'text/html; charset=utf-8');
-    response.end(`<title>SSANDEVISTHAN local deployment secrets</title><h1>SSANDEVISTHAN deployment credentials</h1><p>Stores only in the ignored .secrets/neon.json file on this computer. No value is printed.</p><form method="post"><label>Credential name<select name="name">${allowed.map(name => `<option>${name}</option>`).join('')}</select></label><label>Credential value<input name="value" type="password" autocomplete="off" required></label><button>Save local secret</button></form>`);
+    response.end(`<title>SSANDEVISTHAN local deployment secrets</title><h1>SSANDEVISTHAN deployment credentials</h1><p>Stores only in the ignored .secrets/${secretFile} file on this computer. No value is printed.</p><form method="post"><label>Credential name<select name="name">${allowed.map(name => `<option>${name}</option>`).join('')}</select></label><label>Credential value<input name="value" type="password" autocomplete="off" required></label><button>Save local secret</button></form>`);
     return;
   }
   if (request.method !== 'POST' || request.headers.origin !== origin || !request.headers['content-type']?.startsWith('application/x-www-form-urlencoded')) {

@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-09T08:27:40.518Z",
+  "environment": "LIVE_NEON_CONTROLLED_RETENTION_FIXTURES",
+  "providerCalls": 0,
+  "productSearchSuccess": false,
+  "expiredUploadHidden": true,
+  "expiredRunHidden": true,
+  "expiredUploadRemoved": true,
+  "expiredRunDeleted": true,
+  "terminalRemoved": true,
+  "orphanRemoved": true,
+  "cleanupDueAt": "2026-10-09T08:24:31.374Z",
+  "latestCleanupAt": "2026-10-09T08:25:01.825Z"
+}

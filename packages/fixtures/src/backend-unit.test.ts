@@ -88,7 +88,7 @@ describe('Merchant Product/Offer binding — SYNTHETIC JSON-LD only', () => {
   });
 });
 
-const rates = { model: 'gpt-6.1-sol', inputMicrousdPerMillion: 1_000_000, cachedInputMicrousdPerMillion: 500_000, outputMicrousdPerMillion: 2_000_000, webSearchMicrousdPerCall: 1000, operations: { discovery: { maxInputTokens: 1000, maxOutputTokens: 100, maxToolCalls: 1 } }, version: 'SYNTHETIC_RATE_ONLY' };
+const rates = { model: 'gpt-6.1-sol', serviceTier:'default',processing:'global',inputMicrousdPerMillion: 1_000_000, cachedInputMicrousdPerMillion: 500_000, cacheWriteMicrousdPerMillion:1_250_000,outputMicrousdPerMillion: 2_000_000, webSearchMicrousdPerCall: 1000, operations: { discovery: { maxInputTokens: 1000, maxOutputTokens: 100, maxToolCalls: 1 } }, version: 'SYNTHETIC_RATE_ONLY' };
 describe('Provider source and usage parsing — SYNTHETIC, no API request', () => {
   it('accepts only actual tool sources, rejects prose URLs, and deduplicates tracking links', () => {
     const parsed = discoverySources({ id: 'synthetic-response', status: 'completed', output: [
@@ -105,8 +105,8 @@ describe('Provider source and usage parsing — SYNTHETIC, no API request', () =
     expect(outputJson({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: '[]' }] }] })).toEqual([]);
   });
   it('reserves the configured worst case and includes cached token/tool fees in actual usage', () => {
-    expect(quoteCost(rates, 'discovery')).toBe(2200);
-    const usage = usageCost(rates, { usage: { input_tokens: 100, output_tokens: 20, input_tokens_details: { cached_tokens: 20 } }, output: [{ type: 'web_search_call' }] });
+    expect(quoteCost(rates, 'discovery')).toBe(2450);
+    const usage = usageCost(rates, { model:'gpt-6.1-sol',service_tier:'default',usage: { input_tokens: 100, output_tokens: 20, input_tokens_details: { cached_tokens: 20,cache_write_tokens:0 } }, output: [{ type: 'web_search_call' }] });
     expect(usage.actual).toBe(1130);
     expect(usage.units.webSearchCalls).toBe(1);
   });

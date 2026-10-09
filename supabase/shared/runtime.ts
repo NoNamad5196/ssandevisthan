@@ -20,7 +20,7 @@ export function required(name: string): string {
 export const versions = Object.freeze({
   ...SEARCH_VERSIONS,
   pipelineVersion:'similar-search-v3',visionPromptVersion:'vision-attributes-v3',queryExpanderVersion:'query-v3',
-  extractorVersion:'jsonld-strict-v3-1',rankerVersion:'ranker-v3-bootstrap-1',gateVersion:'gate-v3-bootstrap-1',
+  extractorVersion:'merchant-router-v3-1-jsonld1-elevenst2',rankerVersion:'ranker-v3-bootstrap-1',gateVersion:'gate-v3-bootstrap-1',
   pricePolicyVersion:'unconditional-cohort-v3',sourcePolicyVersion:'domestic-new-v3',
   dealRankerVersion:SEARCH_VERSIONS.dealRankerVersion,normalizerVersion:'magick-webp-v3-1',inputPolicyVersion:'query-nfc-controls-v3-1',
 });

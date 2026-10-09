@@ -4,7 +4,7 @@ import { AppError, sha256, type Row } from '../runtime.ts';
 import { SafeFetcher } from '../safe-fetch.ts';
 import { validateMerchantImage } from '../images.ts';
 
-export const ELEVENST_VERSION='11st-public-size-option-v3-1';
+export const ELEVENST_VERSION='11st-public-size-option-v3-2';
 const fail=(code:string):never=>{throw new AppError(code,422);};
 const plain=(s:string)=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
 function attrs(s:string){return Object.fromEntries([...s.matchAll(/([\w-]+)\s*=\s*(["'])(.*?)\2/gs)].map(m=>[m[1],m[3]]));}
@@ -15,6 +15,22 @@ function jsonVariable(html:string,name:string):Row{
 }
 const money=(value:unknown):number=>{const s=String(value);if(!/^(?:\d+|\d{1,3}(?:,\d{3})+)$/.test(s))return fail('CONFLICTING_SOURCE');const n=Number(s.replaceAll(',',''));return Number.isSafeInteger(n)&&n>0?n:fail('CONFLICTING_SOURCE');};
 function tableValue(html:string,label:string){const match=html.match(new RegExp(`<th\\b[^>]*>\\s*${label}\\s*<\\/th>\\s*<td\\b[^>]*>([\\s\\S]*?)<\\/td>`));return match?plain(match[1]):null;}
+
+/** The first price panel after the verified current-product title is the buybox.
+ * Balance nested divs so a help panel cannot hide the sale-stopped notice. Script,
+ * style, template and comment contents are data, never visible stock evidence. */
+function currentPricePanel(afterTitle:string):string|null{
+ const ignored=/<!--[\s\S]*?-->|<(?:script|style|template)\b[^>]*>[\s\S]*?<\/(?:script|style|template)\s*>/gi;
+ const visible=afterTitle.replace(ignored,'');
+ const divs=/<\/?div\b([^>]*)>/gi;let opening:RegExpExecArray|null;
+ while((opening=divs.exec(visible))){
+  if(opening[0].startsWith('</')||!attrs(opening[1]).class?.split(/\s+/).includes('b_product_info_price'))continue;
+  const start=divs.lastIndex;let depth=1,token:RegExpExecArray|null;
+  while((token=divs.exec(visible))){depth+=token[0].startsWith('</')?-1:1;if(depth===0)return visible.slice(start,token.index);}
+  return fail('CONFLICTING_SOURCE');
+ }
+ return null;
+}
 
 /** Source-specific parsing of public page data. Never evaluates merchant scripts,
  * calls checkout APIs, or assumes eligibility from a Korean domain or title. */
@@ -36,9 +52,12 @@ export function parseElevenstProduct(html:string,pageUrl:string){
  const product=products[0],offer=product.offers;
  if(!offer||Array.isArray(offer)||offer['@type']!=='Offer'||offer.url!==canonicalUrl||offer.priceCurrency!=='KRW')return fail('CONFLICTING_SOURCE');
  if(typeof product.name!=='string'||product.name!==info.prdNm||product.name!==metadata.product_name||product.name.length>500)return fail('CONFLICTING_SOURCE');
- const titleBlock=html.match(/<div\b[^>]*class=["'][^"']*\bc_product_info_title\b[^"']*["'][^>]*>([\s\S]*?<\/h1>)/)?.[1]??'';
+ const titleMatch=html.match(/<div\b[^>]*class=["'][^"']*\bc_product_info_title\b[^"']*["'][^>]*>([\s\S]*?<\/h1>)/);
+ const titleBlock=titleMatch?.[1]??'';
  const visibleTitle=titleBlock.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1];
  if(!visibleTitle||plain(visibleTitle)!==product.name)return fail('CONFLICTING_SOURCE');
+ const pricePanel=currentPricePanel(html.slice((titleMatch!.index??0)+titleMatch![0].length));
+ if(pricePanel&&[...pricePanel.matchAll(/<p\b([^>]*)>([\s\S]*?)<\/p>/gi)].some(m=>attrs(m[1]).class?.split(/\s+/).includes('text_em_lg')&&/^현재\s*판매\s*중인\s*상품이\s*아닙니다[.!]?$/.test(plain(m[2]))))return fail('OUT_OF_STOCK');
  const dispatch=plain(titleBlock.match(/<em\b[^>]*class=["']title_sub["'][^>]*>([\s\S]*?)<\/em>/)?.[1]??'');
  const domesticDispatch=/(?:^|[\s(])(?:국내|한국)\s*(?:발송|출고|재고)(?:[\s)]|$)/.test(`${dispatch} ${product.name}`);
  const domesticSales=domesticDispatch&&['개인사업자','법인사업자'].includes(tableValue(html,'사업자구분')??'')&&tableValue(html,'판매자')===metadata.store_name?true:null;
