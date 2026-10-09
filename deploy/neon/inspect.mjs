@@ -34,7 +34,7 @@ try {
       (SELECT count(*)::int FROM public.cleanup_tasks WHERE state<>'DONE' AND available_at<now()) overdue_cleanup_tasks,
       (SELECT coalesce(max(extract(epoch FROM now()-available_at)),0)::int FROM public.cleanup_tasks WHERE state<>'DONE' AND available_at<now()) oldest_cleanup_delay_seconds`))[0],
     budget: (await rows(`WITH pending AS (SELECT coalesce(sum(reserved_microusd),0) amount FROM public.budget_reservations WHERE operation_key='SEARCH' AND state='RESERVED')
-      SELECT enabled,ceiling_microusd::text,spent_microusd::text,pending.amount::text reserved_search_microusd,
+      SELECT enabled,ceiling_microusd::text,spent_microusd::text,pending.amount::text reserved_search_microusd,search_ceiling_microusd::text,minimum_search_reservation_microusd::text,
       CASE WHEN history_verified_at IS NOT NULL THEN greatest(0,ceiling_microusd-spent_microusd-pending.amount)::text ELSE NULL END available_microusd,
       history_verified_at,rates_verified_at,model_verified_at,free_quota_verified_at FROM public.pilot_budget CROSS JOIN pending WHERE id=true`))[0],
     schedule: (await rows('SELECT max(minute) last_active_database_sweep FROM public.schedule_ticks'))[0],

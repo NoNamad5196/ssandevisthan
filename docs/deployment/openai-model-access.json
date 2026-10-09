@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-09T08:48:32.068Z",
+  "method": "GET",
+  "endpoint": "https://api.openai.com/v1/models/gpt-6.1-sol",
+  "httpStatus": 200,
+  "accessibleModel": "gpt-6.1-sol",
+  "paidInferencePerformed": false,
+  "limitations": [
+    "Model access only; vision, structured output and web search are not verified by this read-only request."
+  ]
+}

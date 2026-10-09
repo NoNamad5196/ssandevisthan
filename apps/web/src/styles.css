@@ -48,6 +48,11 @@
  .search-field:before{content:'';position:absolute;inset:1px;background:#090e12;clip-path:inherit;z-index:-1}
 }
 @media(max-width:767px){.hero-collage{clip-path:polygon(20% 0,100% 0,100% 100%,0 100%,0 45%)}}
+@media(max-width:767px){
+ .deal-filters button{position:relative;isolation:isolate;border:0;background:#677080}
+ .deal-filters button:before{content:'';position:absolute;inset:1px;background:#090e12;clip-path:inherit;z-index:-1}
+ .deal-filters button[aria-pressed=true]{background:#ffff00}
+}
 .product-warning{font-size:13px;line-height:1.5;color:#ffe37b;border-left:2px solid #ffe37b;padding-left:9px;margin-top:12px}
 .privacy-dialog{width:min(560px,calc(100vw - 32px));max-height:85vh;overflow:auto;border:1px solid var(--brand-yellow);background:#10171d;color:#f5f7fa;padding:28px;text-align:left;line-height:1.65}
 .privacy-dialog::backdrop{background:#000b}

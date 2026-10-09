@@ -2,11 +2,18 @@ import { isPublicIpAddress, validatePublicHttpsUrl } from '@ssandevisthan/search
 import { AppError, boundedBody, env } from './runtime.ts';
 
 export interface SafeResponse {url:string;status:number;headers:Headers;bytes:Uint8Array}
-export interface PinnedTransport {get(url:URL,ip:string,signal:AbortSignal,cap:number):Promise<SafeResponse>}
+export interface PinnedTransport {get(url:URL,ip:string,signal:AbortSignal,cap:number):Promise<SafeResponse>;post?(url:URL,ip:string,signal:AbortSignal,cap:number,body:Uint8Array):Promise<SafeResponse>}
 export interface Resolver {resolve(host:string):Promise<string[]>}
 export interface SourceGuard {enter(host:string):Promise<(()=>Promise<void>)|null>}
 let fetchAdapter:{resolver:Resolver;transport:PinnedTransport}|null=null;
 export function configureSafeFetcher(adapter:NonNullable<typeof fetchAdapter>){fetchAdapter=adapter;}
+export function assertSourcePolicy(url:URL):void{
+  // Official merchant terms reviewed 2026-10-09 prohibit automated collection
+  // without agreement. No runtime switch bypasses this policy. Offline adapter
+  // fixtures are retained for a future explicitly authorized feed/integration.
+  const host=url.hostname.toLowerCase().replace(/\.$/,'');
+  if(host==='musinsa.com'||host.endsWith('.musinsa.com'))throw new AppError('SOURCE_POLICY_BLOCKED',403);
+}
 function abortBound<T>(promise:Promise<T>,signal:AbortSignal,late?:(value:T)=>void):Promise<T>{
   return new Promise((resolve,reject)=>{
     let finished=false;const abort=()=>{if(!finished){finished=true;reject(new AppError('TIMEOUT',504));}};
@@ -29,7 +36,9 @@ export function isChallengePage(html:string):boolean{
  * for TLS SNI and certificate validation. There is no second hostname resolution.
  * This is ordinary direct HTTPS, never an alternate network path around a block. */
 export class DenoPinnedTransport implements PinnedTransport {
-  async get(url:URL,ip:string,signal:AbortSignal,cap:number):Promise<SafeResponse>{
+  get(url:URL,ip:string,signal:AbortSignal,cap:number):Promise<SafeResponse>{return this.request(url,ip,signal,cap);}
+  post(url:URL,ip:string,signal:AbortSignal,cap:number,body:Uint8Array):Promise<SafeResponse>{return this.request(url,ip,signal,cap,body);}
+  private async request(url:URL,ip:string,signal:AbortSignal,cap:number,body?:Uint8Array):Promise<SafeResponse>{
     if(env('EGRESS_VERIFIED')!=='true')throw new AppError('EGRESS_UNVERIFIED',503);
     let socket:Deno.Conn|Deno.TlsConn|undefined;
     const close=()=>{try{socket?.close();}catch{/* already closed */}};
@@ -38,7 +47,8 @@ export class DenoPinnedTransport implements PinnedTransport {
       signal.throwIfAborted();socket=await abortBound(Deno.connect({hostname:ip,port:443,transport:'tcp'}),signal,s=>s.close());
       if(socket.remoteAddr.transport!=='tcp'||!isPublicIpAddress(socket.remoteAddr.hostname))throw new AppError('SSRF_BLOCKED',400);
       signal.throwIfAborted();socket=await abortBound(Deno.startTls(socket as Deno.TcpConn,{hostname:url.hostname,alpnProtocols:['http/1.1']}),signal,s=>s.close());
-      const request=new TextEncoder().encode(`GET ${url.pathname}${url.search} HTTP/1.1\r\nHost: ${url.host}\r\nAccept: text/html,image/jpeg,image/png,image/webp\r\nAccept-Encoding: identity\r\nConnection: close\r\nUser-Agent: SSANDEVISTHAN/3 (+public-product-verification)\r\n\r\n`);
+      const header=new TextEncoder().encode(`${body?'POST':'GET'} ${url.pathname}${url.search} HTTP/1.1\r\nHost: ${url.host}\r\nAccept: ${body?'application/json':'text/html,image/jpeg,image/png,image/webp'}\r\n${body?`Content-Type: application/json\r\nContent-Length: ${body.length}\r\n`:''}Accept-Encoding: identity\r\nConnection: close\r\nUser-Agent: SSANDEVISTHAN/3 (+public-product-verification)\r\n\r\n`);
+      const request=new Uint8Array(header.length+(body?.length??0));request.set(header);if(body)request.set(body,header.length);
       let sent=0;while(sent<request.length)sent+=await socket.write(request.subarray(sent));
       const chunks:Uint8Array[]=[];let total=0;const buffer=new Uint8Array(16384);
       while(true){signal.throwIfAborted();const n=await socket.read(buffer);if(n===null)break;total+=n;
@@ -76,12 +86,39 @@ const dnsResolver:Resolver={async resolve(host){
 }};
 export class SafeFetcher{
   constructor(private resolver:Resolver=fetchAdapter?.resolver??dnsResolver,private transport:PinnedTransport=fetchAdapter?.transport??new DenoPinnedTransport(),private guard?:SourceGuard){}
+  /** This anonymous merchant endpoint reads option inventory. It cannot be used
+   * as a general POST proxy: host, path, body, method and credentials are fixed. */
+  async postJson(input:string,body:{optionValueNos:number[]},deadline:number):Promise<SafeResponse>{
+    let url:URL;try{url=validatePublicHttpsUrl(input);}catch{throw new AppError('SSRF_BLOCKED',400);}
+    if(url.hostname!=='goods-detail.musinsa.com'||!/^\/api2\/goods\/[1-9]\d*\/options\/v2\/prioritized-inventories$/.test(url.pathname)||url.search||url.hash)
+      throw new AppError('POST_ENDPOINT_BLOCKED',400);
+    if(!body||Object.keys(body).length!==1||!Array.isArray(body.optionValueNos)||body.optionValueNos.length<1||body.optionValueNos.length>20||
+      body.optionValueNos.some(n=>!Number.isSafeInteger(n)||n<=0)||new Set(body.optionValueNos).size!==body.optionValueNos.length)throw new AppError('INVALID_INPUT',400);
+    const bytes=new TextEncoder().encode(JSON.stringify({optionValueNos:body.optionValueNos}));if(bytes.length>4096)throw new AppError('INVALID_INPUT',400);
+    assertSourcePolicy(url);
+    const remaining=Math.min(8000,deadline-Date.now()-2000);if(remaining<=0)throw new AppError('TIMEOUT',504);
+    const signal=AbortSignal.timeout(remaining),addresses=await abortBound(this.resolver.resolve(url.hostname),signal);
+    if(!addresses.length||addresses.some(ip=>!isPublicIpAddress(ip)))throw new AppError('SSRF_BLOCKED',400);
+    if(!this.transport.post)throw new AppError('EGRESS_UNVERIFIED',503);
+    const release=this.guard?await abortBound(this.guard.enter(url.hostname),signal,fn=>{void fn?.().catch(()=>{});}):undefined;
+    if(release===null)throw new AppError('SOURCE_BUSY',503,true);
+    let response:SafeResponse;try{response=await abortBound(this.transport.post(url,addresses[0],signal,2000000,bytes),signal);}
+    finally{if(release)await abortBound(release(),signal).catch(()=>{});}
+    if(response.status===403)throw new AppError('BLOCKED',403);if(response.status===429)throw new AppError('RATE_LIMITED',429);
+    if([301,302,303,307,308].includes(response.status))throw new AppError('REDIRECT_BLOCKED',502);
+    if(response.status!==200)throw new AppError('SOURCE_UNAVAILABLE',502);
+    if(response.bytes.length>2000000)throw new AppError('RESPONSE_TOO_LARGE',413);
+    if(response.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json')throw new AppError('INVALID_CONTENT_TYPE',415);
+    try{JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(response.bytes));}catch{throw new AppError('INVALID_JSON',502);}
+    return response;
+  }
   async get(input:string,kind:'html'|'image',deadline:number):Promise<SafeResponse>{
     let url=new URL(input);const cap=kind==='html'?2000000:10000000;
     const remaining=Math.min(8000,deadline-Date.now()-2000);if(remaining<=0)throw new AppError('TIMEOUT',504);
     const signal=AbortSignal.timeout(remaining);
     for(let redirects=0;redirects<=3;redirects++){
       try{url=validatePublicHttpsUrl(url.href);}catch{throw new AppError('SSRF_BLOCKED',400);}
+      assertSourcePolicy(url);
       const addresses=await abortBound(this.resolver.resolve(url.hostname),signal);
       if(!addresses.length||addresses.some(ip=>!isPublicIpAddress(ip)))throw new AppError('SSRF_BLOCKED',400);
       const release=this.guard?await abortBound(this.guard.enter(url.hostname),signal,fn=>{void fn?.().catch(()=>{});}):undefined;

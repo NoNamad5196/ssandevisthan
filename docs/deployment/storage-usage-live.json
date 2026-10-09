@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-09T08:53:45.199Z",
+  "environment": "LIVE_NEON_STORAGE_METADATA",
+  "bucket": "search-images",
+  "currentObjectCount": 10,
+  "currentObjectBytes": 18495,
+  "currentNormalizedImageCount": 1,
+  "currentNormalizedImageBytes": 18486,
+  "branchVisibleBucketCount": 1,
+  "projectBranchCount": 1,
+  "documentedFreeStorageBytes": 5000000000,
+  "applicationMaximumActiveUploadBytes": 1000000000,
+  "limitations": [
+    "Current object listings are not a historical billing meter.",
+    "Free quota verification flag was not changed.",
+    "No object content was downloaded."
+  ]
+}

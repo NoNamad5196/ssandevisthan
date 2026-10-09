@@ -1,0 +1,120 @@
+{
+  "observedAt": "2026-10-09T08:43:39.244Z",
+  "mode": "LIVE_ANONYMOUS_MERCHANT_READ_ONLY",
+  "providerCalls": 0,
+  "productUrl": "https://www.musinsa.com/products/6982363",
+  "stockRequest": {
+    "method": "POST",
+    "url": "https://goods-detail.musinsa.com/api2/goods/6982363/options/v2/prioritized-inventories",
+    "body": {
+      "optionValueNos": [
+        24892091
+      ]
+    },
+    "status": 200,
+    "cookies": false,
+    "authorization": false
+  },
+  "sources": [
+    {
+      "url": "https://static.msscdn.net/static/mss-frontend-web/_next/static/chunks/2322-1791441168531.16477e6e57e9a888.js",
+      "sha256": "34fc7bacdfd54e8988b21a1298133ad92671f7253ac6e2b92a3d349019295c17"
+    },
+    {
+      "url": "https://static.msscdn.net/static/mss-frontend-web/_next/static/chunks/6426-1791441168531.a1a4713ea4668d54.js",
+      "sha256": "27a755d9009ad0a0d4cc6ded6fd587d37c29a758dde13e32727104767e718884"
+    }
+  ],
+  "mapping": "stock.productVariantId equals Options.optionItems.no; optionItem optionValueNos join Options.basic.optionValues.no for color/size and color-specific image.",
+  "observations": [
+    {
+      "productId": 6982363,
+      "productVariantId": 32603866,
+      "outOfStock": false,
+      "remainQuantity": null,
+      "isRedirect": false,
+      "relatedOption": null,
+      "deliveryType": "MANUAL",
+      "manualType": "GENERAL",
+      "willReleaseDate": "2026-10-13"
+    },
+    {
+      "productId": 6982363,
+      "productVariantId": 32603867,
+      "outOfStock": false,
+      "remainQuantity": null,
+      "isRedirect": false,
+      "relatedOption": null,
+      "deliveryType": "MANUAL",
+      "manualType": "RESERVE",
+      "willReleaseDate": "2026-10-28"
+    },
+    {
+      "productId": 6982363,
+      "productVariantId": 32603868,
+      "outOfStock": false,
+      "remainQuantity": null,
+      "isRedirect": false,
+      "relatedOption": null,
+      "deliveryType": "MANUAL",
+      "manualType": "RESERVE",
+      "willReleaseDate": "2026-10-28"
+    }
+  ],
+  "browserEvidence": {
+    "selectedColor": "MELANGE GREY",
+    "selectedSize": "S",
+    "selectedOrdinaryPriceKRW": 49900,
+    "dispatch": "2026-10-13",
+    "otherSizes": "M/L explicitly show reserved shipping on 2026-10-28",
+    "purchaseOrCartSubmitted": false
+  },
+  "constraints": [
+    "Options activated=true is not availability proof.",
+    "remainQuantity=null does not prove zero or positive count; explicit outOfStock=false is the availability declaration.",
+    "Exclude RESERVE/preorder options even when outOfStock=false.",
+    "Reject mismatched product/variant IDs, redirects, related replacement SKUs, invalid envelopes and missing stock evidence.",
+    "Stock response provides no price: bind ordinary product salePrice plus exact option adjustment from the same observed product.",
+    "No LIVE AI similarity/search success is implied.",
+    "goodsType S/P represents Musinsa-direct versus brand fulfilment in the public UI code, not sale-versus-rental; do not infer rental=false from P.",
+    "Global free-shipping wording is member-conditional; do not infer unconditional shippingFee=0 from it."
+  ],
+  "sourcePolicy": {
+    "reviewedAt": "2026-10-09T08:48:48.931Z",
+    "footerLink": "https://www.musinsa.com/member/join/agreement/service",
+    "resolvedOfficialUrl": "https://member.one.musinsa.com/agreement/service",
+    "document": "Musinsa integrated service terms",
+    "effectiveDate": "2026-09-28",
+    "ordinarySaleEvidence": [
+      {
+        "article": "23(1)",
+        "summary": "Direct retail purchase is expressly described as a contract for sale of goods, formed by offer and acceptance."
+      },
+      {
+        "article": "30(1)",
+        "summary": "Marketplace purchase is expressly described as a contract for sale between the user and seller on the seller terms."
+      },
+      {
+        "article": "31(3)",
+        "summary": "After delivery the order can become purchase-confirmed; this supports the ordinary purchase flow observed on the product."
+      }
+    ],
+    "interpretation": "Together with the observed exact physical SKU, fixed unit price, quantity and purchase CTA, these terms support an ordinary-sale merchant profile. This is evidence mapping, not a legal guarantee, and does not derive non-rental status from goodsType P or absence of rental words. Contradictory rental/subscription/lease terms must reject the candidate.",
+    "accessRestrictionEvidence": [
+      {
+        "article": "11(2)(9)",
+        "summary": "The terms restrict automated or manual extraction, collection or monitoring of service data without company agreement."
+      },
+      {
+        "article": "11(2)(10)",
+        "summary": "The terms also restrict access using source-extracted URLs or commands and packet-capture or similar means."
+      },
+      {
+        "article": "44(2)",
+        "summary": "The terms restrict specified commercial reuse of company-owned information without prior consent."
+      }
+    ],
+    "permissionEvidencePresent": false,
+    "recommendation": "Keep live Musinsa extraction disabled until an authorized feed or permission resolves the documented access restrictions. Retain deterministic synthetic adapter tests only. Do not treat HTTP200 or absent CAPTCHA as permission."
+  }
+}

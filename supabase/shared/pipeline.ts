@@ -7,7 +7,7 @@ import {AppError,Database,audit,sha256,type Row} from './runtime.ts';
 import {OpenAIProvider} from './providers/openai.ts';
 import {extractCandidate} from './extractors/generic.ts';
 import {extractElevenstCandidate} from './extractors/elevenst.ts';
-import {SafeFetcher} from './safe-fetch.ts';
+import {SafeFetcher,assertSourcePolicy} from './safe-fetch.ts';
 import {normalizeImage} from './images.ts';
 
 const warning=(code:string,message='일부 판매처 또는 후보를 확인하지 못했어요.')=>({code,message});
@@ -107,6 +107,7 @@ async function stage(db:Database,provider:OpenAIProvider,run:Row,job:Row,deadlin
       for(const c of batch){
         try{
           const parsedUrl=new URL(c.canonical_url);
+          assertSourcePolicy(parsedUrl); // Never fall back to a generic adapter for a blocked merchant.
           const extractor=parsedUrl.hostname==='www.11st.co.kr'&&/^\/products\/\d+\/?$/.test(parsedUrl.pathname)?extractElevenstCandidate:extractCandidate;
           const candidate=await extractor({searchId:run.id,candidateId:c.id,url:c.canonical_url,deadline},fetcher);
           if(run.mode==='DEAL_TEXT'){
