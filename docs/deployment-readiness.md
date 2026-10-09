@@ -47,3 +47,15 @@ The initial frontend preview does not authorize enabling LIVE searches before ba
 - [Operations/release contract v3](https://app.notion.com/p/3ec7cdef782d8146917ec72af0ef8d89)
 
 No paid infrastructure, automatic billing, or additional paid services were enabled during this readiness check.
+
+## Phase B visual and UI evidence
+
+The 1586×992 desktop and 390×844 mobile screenshots were inspected directly. Desktop logo, industrial background, clothing collage, and the distinctive main headline preserve the source image. The upload form and hot-deal controls remain real, keyboard-operable HTML controls. Mobile keeps the yellow/black palette, cut corners, original logo, and layered clothing artwork.
+
+`node scripts/verify-assets.mjs` passes for all 17 source-derived artwork files, exact source PNG SHA-256, two official font hashes, and the committed font notices. The check derives every crop, transparent cutout, and explicitly declared adjacent-texture resize from the original PNG. It does not depend on ignored download files or rewrite license notices. Gmarket's embedded English/Korean license text is preserved, including the vendor's additional promotion clause.
+
+The unmasked desktop comparison reports 4.103% of pixels with at least one channel differing by more than 24/255, with mean channel difference 4.446/255. Logo and clothing collage regions have zero difference. Remaining differences are chiefly the functional UI text, icons, reconstructed text backdrops, header navigation, and hot-deal controls. These diagnostics are **not** an automatic visual acceptance threshold, and do not mean every rendered pixel matches the reference.
+
+Reproduce the evidence with `npm run test:e2e`, then `node scripts/verify-visual.mjs test-results/visual/home-1586x992.png`. An optional third argument chooses a durable evidence directory. Current inspected copies are under ignored `.cache/deployment/phase-b/`; the deployed first frontend capture is `.cache/deployment/live-home-1586x992.png`. Subsequent backend deployment requires another production capture because that first public build predates the final Phase B visual refinements.
+
+The seven deterministic Playwright tests cover five viewport sizes (1586, 1440, 1280, 390, and 360 pixels wide), missing/undecoded assets and fonts, overflow, upload MIME/size/decode validation, image replacement, hot-deal minimum-length validation, keyboard focus, and reduced motion. These tests do not call paid providers and do not establish LIVE search success.

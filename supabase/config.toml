@@ -1,0 +1,31 @@
+project_id = "ssandevisthan"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 100
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+enable_anonymous_sign_ins = true
+site_url = "http://localhost:5173"
+jwt_expiry = 3600
+
+[storage]
+enabled = true
+file_size_limit = "10MB"
+
+[functions.api]
+verify_jwt = false
+
+[functions.worker]
+verify_jwt = false
+
+[functions.sweep]
+verify_jwt = false

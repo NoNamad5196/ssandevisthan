@@ -1,0 +1,13 @@
+{
+  "imports": {
+    "@ssandevisthan/contracts": "../../packages/contracts/src/index.ts",
+    "@ssandevisthan/search-core": "../../packages/search-core/src/index.ts",
+    "zod": "npm:zod@4.6.5",
+    "@imagemagick/magick-wasm": "npm:@imagemagick/magick-wasm@0.0.44"
+  },
+  "compilerOptions": { "strict": true, "types": ["../shared/edge.d.ts"] },
+  "tasks": {
+    "check": "deno check api/index.ts worker/index.ts sweep/index.ts",
+    "test": "deno test --allow-read ../tests"
+  }
+}

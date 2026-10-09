@@ -1,8 +1,11 @@
 import sharp from 'sharp';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 const referencePath = 'design/reference/original.png';
 const capturePath = process.argv[2] ?? 'test-results/visual/home-1586x992.png';
+const outputDirectory = process.argv[3] ?? 'test-results/visual';
+await mkdir(outputDirectory, { recursive: true });
 const reference = await sharp(referencePath).removeAlpha().raw().toBuffer({ resolveWithObject: true });
 const actual = await sharp(capturePath).removeAlpha().raw().toBuffer({ resolveWithObject: true });
 if (reference.info.width !== actual.info.width || reference.info.height !== actual.info.height) throw new Error('Visual comparison requires the original 1586×992 dimensions');
@@ -28,8 +31,8 @@ for (const [name, [left, top, regionWidth, regionHeight]] of Object.entries(regi
 }
 const overlay = Buffer.alloc(reference.data.length), difference = Buffer.alloc(reference.data.length);
 for (let i = 0; i < overlay.length; i++) { overlay[i] = Math.round((reference.data[i] + actual.data[i]) / 2); difference[i] = Math.min(255, Math.abs(reference.data[i] - actual.data[i]) * 3); }
-await sharp(overlay, { raw: { width, height, channels } }).png().toFile('test-results/visual/overlay.png');
-await sharp(difference, { raw: { width, height, channels } }).png().toFile('test-results/visual/difference-amplified.png');
+await sharp(overlay, { raw: { width, height, channels } }).png().toFile(resolve(outputDirectory, 'overlay.png'));
+await sharp(difference, { raw: { width, height, channels } }).png().toFile(resolve(outputDirectory, 'difference-amplified.png'));
 const report = { reference: referencePath, capture: capturePath, viewport: { width, height }, masks: [], note: 'Difference metrics are diagnostic, not a release acceptance threshold. No regions are masked. Visual reviewer approval is still required.', metrics };
-await writeFile('test-results/visual/metrics.json', JSON.stringify(report, null, 2) + '\n');
+await writeFile(resolve(outputDirectory, 'metrics.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2));

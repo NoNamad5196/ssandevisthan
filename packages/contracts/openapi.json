@@ -12,12 +12,12 @@
   ],
   "security": [
     {
-      "SupabaseJWT": []
+      "BearerSessionJWT": []
     }
   ],
   "components": {
     "securitySchemes": {
-      "SupabaseJWT": {
+      "BearerSessionJWT": {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
@@ -4751,10 +4751,326 @@
           "meta"
         ],
         "additionalProperties": false
+      },
+      "AnonymousAuthRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "number",
+            "const": 3
+          }
+        },
+        "required": [
+          "schemaVersion"
+        ],
+        "additionalProperties": false
+      },
+      "RefreshAuthRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "number",
+            "const": 3
+          },
+          "refreshToken": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 2048,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "refreshToken"
+        ],
+        "additionalProperties": false
+      },
+      "AuthSession": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "minLength": 20,
+                "maxLength": 8192,
+                "pattern": "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$"
+              },
+              "refreshToken": {
+                "type": "string",
+                "minLength": 32,
+                "maxLength": 2048,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              "userId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "accessToken",
+              "refreshToken",
+              "expiresAt",
+              "userId"
+            ],
+            "additionalProperties": false
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "schemaVersion": {
+                "type": "number",
+                "const": 3
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+              },
+              "pipelineVersion": {
+                "type": "string"
+              },
+              "visionPromptVersion": {
+                "type": "string"
+              },
+              "queryExpanderVersion": {
+                "type": "string"
+              },
+              "extractorVersion": {
+                "type": "string"
+              },
+              "rankerVersion": {
+                "type": "string"
+              },
+              "gateVersion": {
+                "type": "string"
+              },
+              "pricePolicyVersion": {
+                "type": "string"
+              },
+              "sourcePolicyVersion": {
+                "type": "string"
+              },
+              "dealRankerVersion": {
+                "type": "string"
+              },
+              "providerFailures": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "provider": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "code": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "VALIDATING",
+                        "ANALYZING",
+                        "DISCOVERING",
+                        "EXTRACTING",
+                        "COMPARING",
+                        "RANKING"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "provider",
+                    "code"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "sourceStats": {
+                "type": "object",
+                "properties": {
+                  "rawUrls": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 150
+                  },
+                  "dedupUrls": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 60
+                  },
+                  "extractedProducts": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 30
+                  },
+                  "comparedProducts": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20
+                  },
+                  "passedSimilarityGate": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20
+                  },
+                  "rankableProducts": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 30
+                  },
+                  "countsByPriceBasis": {
+                    "type": "object",
+                    "properties": {
+                      "TOTAL_PRICE": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "ITEM_PRICE_ONLY": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "UNKNOWN": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "TOTAL_PRICE",
+                      "ITEM_PRICE_ONLY",
+                      "UNKNOWN"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "rawUrls",
+                  "dedupUrls",
+                  "extractedProducts",
+                  "comparedProducts",
+                  "passedSimilarityGate",
+                  "rankableProducts",
+                  "countsByPriceBasis"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "requestId",
+              "schemaVersion",
+              "createdAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "ok",
+          "data",
+          "meta"
+        ],
+        "additionalProperties": false
       }
     }
   },
   "paths": {
+    "/auth/anonymous": {
+      "post": {
+        "operationId": "createAnonymousSession",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnonymousAuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Anonymous owner established. Persist the session before creating user data; access token 1 hour, refresh token 30 days.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe v3 error envelope; provider failures after acceptance are run states, not polling gateway errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "refreshAnonymousSession",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshAuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Same-owner token rotation. Previous refresh token has a 15-second retry grace and returns the same current refresh token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSession"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe v3 error envelope; provider failures after acceptance are run states, not polling gateway errors.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/uploads": {
       "post": {
         "operationId": "createUpload",

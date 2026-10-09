@@ -1,0 +1,21 @@
+{
+  "version": "5",
+  "specifiers": {
+    "npm:@imagemagick/magick-wasm@0.0.44": "0.0.44",
+    "npm:zod@4.6.5": "4.6.5"
+  },
+  "npm": {
+    "@imagemagick/magick-wasm@0.0.44": {
+      "integrity": "sha512-J6oieSjlJzamANwtrNAlO+DKnRm49ILtSIWDhtkGn35f/5zS99AXta2gPsZuG9m2JvQbsu3h3CHe14ViXrFD/Q=="
+    },
+    "zod@4.6.5": {
+      "integrity": "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:@imagemagick/magick-wasm@0.0.44",
+      "npm:zod@4.6.5"
+    ]
+  }
+}
