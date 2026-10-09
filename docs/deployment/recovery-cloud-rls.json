@@ -1,0 +1,377 @@
+{
+  "schemaVersion": 1,
+  "runId": "71ca4ba1-bb20-4384-bf44-0c31bdf091b1",
+  "startedAt": "2026-10-09T10:21:37.549Z",
+  "environment": "NEON_POSTGRESQL_ISOLATED_DATABASE_SHARED_BRANCH",
+  "mode": "SYNTHETIC_FIXTURE",
+  "project": "lucky-sun-06718695",
+  "branch": "br-polished-resonance-az03nnva",
+  "intendedDatabase": "recovery_rls_71ca4ba1bb204384bf44",
+  "status": "PASSED",
+  "checks": [
+    {
+      "name": "local synthetic export excludes uploads, leases and expired search",
+      "pass": true
+    },
+    {
+      "name": "project Free storage and compute have bounded test headroom",
+      "pass": true
+    },
+    {
+      "name": "production DB exists and unique drill DB is absent",
+      "pass": true
+    },
+    {
+      "name": "API created only the exact new database",
+      "pass": true
+    },
+    {
+      "name": "connection URI names exact new DB, owner and current endpoint",
+      "pass": true
+    },
+    {
+      "name": "current_database is exact newly created DB and never neondb",
+      "pass": true
+    },
+    {
+      "name": "new DB has no inherited application tables, functions or triggers",
+      "pass": true
+    },
+    {
+      "name": "all bootstrap roles already exist",
+      "pass": true
+    },
+    {
+      "name": "all seven exact Git migrations applied",
+      "pass": true
+    },
+    {
+      "name": "fresh empty target restores three unexpired searches",
+      "pass": true
+    },
+    {
+      "name": "running search becomes FAILED OPERATOR_STOP",
+      "pass": true
+    },
+    {
+      "name": "spend preserved; paid execution and verification flags disabled",
+      "pass": true
+    },
+    {
+      "name": "uncertain search reservation remains fully held",
+      "pass": true
+    },
+    {
+      "name": "expired search retains orphan unresolved global reservation",
+      "pass": true
+    },
+    {
+      "name": "interrupted provider record becomes UNCERTAIN",
+      "pass": true
+    },
+    {
+      "name": "historical snapshot and ranker version preserved",
+      "pass": true
+    },
+    {
+      "name": "completed and partial owner, state, TTL and version preserved",
+      "pass": true
+    },
+    {
+      "name": "restored product and offer ownership remains relationally valid",
+      "pass": true
+    },
+    {
+      "name": "expired rows and snapshots do not revive",
+      "pass": true
+    },
+    {
+      "name": "image metadata and old job leases excluded",
+      "pass": true
+    },
+    {
+      "name": "terminal restored runs create no claimable jobs",
+      "pass": true
+    },
+    {
+      "name": "stale worker lease fenced",
+      "pass": true
+    },
+    {
+      "name": "restored kill switch rejects search admission",
+      "pass": true
+    },
+    {
+      "name": "repeated terminal settlement neither releases unknown usage nor double charges",
+      "pass": true
+    },
+    {
+      "name": "UUID temporary role is absent before transaction",
+      "pass": true
+    },
+    {
+      "name": "RLS transaction connects only to exact isolated test database",
+      "pass": true
+    },
+    {
+      "name": "existing owner has ADMIN but no SET/INHERIT on authenticated",
+      "pass": true
+    },
+    {
+      "name": "authenticated is NOLOGIN NOSUPERUSER NOBYPASSRLS",
+      "pass": true
+    },
+    {
+      "name": "temporary role cannot log in or bypass RLS/create roles/databases",
+      "pass": true
+    },
+    {
+      "name": "every existing role and membership row remains identical during probe",
+      "pass": true
+    },
+    {
+      "name": "actual authenticated role has active RLS on both tables",
+      "pass": true
+    },
+    {
+      "name": "different synthetic owner cannot read any restored runs/results",
+      "pass": true
+    },
+    {
+      "name": "original synthetic owner reads exactly three runs/two results",
+      "pass": true
+    },
+    {
+      "name": "missing owner claim cannot read any runs/results",
+      "pass": true
+    },
+    {
+      "name": "expiry mutation is still guarded to isolated database and owner",
+      "pass": true
+    },
+    {
+      "name": "own expired search and related result are hidden by live RLS",
+      "pass": true
+    },
+    {
+      "name": "other unexpired owned rows remain readable after expiry probe",
+      "pass": true
+    },
+    {
+      "name": "unconditional rollback removes UUID role and every new membership",
+      "pass": true
+    },
+    {
+      "name": "rollback restores original owner and synthetic search expiry",
+      "pass": true
+    },
+    {
+      "name": "restore refuses populated target",
+      "pass": true
+    },
+    {
+      "name": "expired export rejected before database writes",
+      "pass": true
+    },
+    {
+      "name": "tampered export checksum rejected",
+      "pass": true
+    },
+    {
+      "name": "shared role attributes and memberships unchanged",
+      "pass": true
+    },
+    {
+      "name": "synthetic DB remains below 50 MB",
+      "pass": true
+    },
+    {
+      "name": "temporary DB removed and original DB inventory unchanged",
+      "pass": true
+    },
+    {
+      "name": "existing branch inventory unchanged",
+      "pass": true
+    },
+    {
+      "name": "temporary database lifetime below fifteen minutes",
+      "pass": true
+    }
+  ],
+  "apiWrites": [
+    {
+      "method": "POST",
+      "path": "/branches/br-polished-resonance-az03nnva/databases",
+      "status": 201
+    },
+    {
+      "method": "DELETE",
+      "path": "/branches/br-polished-resonance-az03nnva/databases/recovery_rls_71ca4ba1bb204384bf44",
+      "status": 200
+    }
+  ],
+  "paidProviderCalls": 0,
+  "functionInvocations": 0,
+  "productionDataExports": 0,
+  "productionDatabaseWrites": 0,
+  "globalRoleWrites": 3,
+  "committedRoleWrites": 0,
+  "roleTransactionCommits": 0,
+  "storageWrites": 0,
+  "paidSettingsChanges": 0,
+  "liveProductSearchSuccess": false,
+  "limitations": [
+    "The database is isolated; the Neon branch, endpoint and PostgreSQL roles are shared.",
+    "Only freshly generated synthetic metadata was restored; no production user data was exported.",
+    "No deployed Function or paid provider was invoked. Temporary role/membership writes are uncommitted and rolled back. This is not a cloud application rollback or live product-search success.",
+    "Free usage counters may be delayed; this bounded test does not certify account-wide Functions quota."
+  ],
+  "fixture": {
+    "mode": "SYNTHETIC_FIXTURE",
+    "createdAt": "2026-10-09T10:21:39.885Z",
+    "expiresAt": "2026-10-09T11:21:39.885Z",
+    "sha256": "4690b33613701e522af90e1e3fff429d68ca577582de3ded5c62ecd00d63fce9",
+    "migrations": [
+      {
+        "name": "deploy/neon/000_bootstrap.sql",
+        "sha256": "bf89daea63516986eb8de54345ebeb3b81a737eceed6c7d5b9c1450b005b16dd"
+      },
+      {
+        "name": "supabase/migrations/202610090001_v3_schema.sql",
+        "sha256": "9100ae3c18d8a0c4de0d1990d5a055e67eb4c83b9baba77b34732610a72eb8d5"
+      },
+      {
+        "name": "supabase/migrations/202610090002_transactions.sql",
+        "sha256": "02ea790b8ed44ae4f53801a07b35a2090009a9a7fe4f888b054d307bf7367047"
+      },
+      {
+        "name": "supabase/migrations/202610090003_evidence_and_recovery.sql",
+        "sha256": "c346bb5b81f595e49011109896eb85eabff5c2c5ec818c28573d2b0b3e8d2701"
+      },
+      {
+        "name": "supabase/migrations/202610090004_upload_limits.sql",
+        "sha256": "9aa58c318460d0e4c6b230be26730b4a40ae5bfeffe69068730b1bac83d5f255"
+      },
+      {
+        "name": "deploy/neon/004_runtime.sql",
+        "sha256": "452bff6627609dff0d25ab392ab563c6f6b7067ef9cfc8f8c97163bbed678d39"
+      },
+      {
+        "name": "supabase/migrations/202610090005_dynamic_escrow.sql",
+        "sha256": "675fbeff78e75a5a956221d7a59d9de4b8c1c6c89bbac5ec51ab6f75107d10c3"
+      }
+    ]
+  },
+  "before": {
+    "databases": [
+      {
+        "id": 677976,
+        "name": "neondb",
+        "owner_name": "neondb_owner",
+        "branch_id": "br-polished-resonance-az03nnva"
+      }
+    ],
+    "branchIds": [
+      "br-polished-resonance-az03nnva"
+    ],
+    "logicalBytes": 33783808,
+    "computeTimeSeconds": 559,
+    "endpointId": "ep-icy-bonus-azimm4ee",
+    "endpointMinCU": 0.25,
+    "endpointMaxCU": 2
+  },
+  "createdDatabase": {
+    "id": 678528,
+    "name": "recovery_rls_71ca4ba1bb204384bf44",
+    "owner_name": "neondb_owner",
+    "branch_id": "br-polished-resonance-az03nnva"
+  },
+  "connectedDatabase": "recovery_rls_71ca4ba1bb204384bf44",
+  "emptyMetadata": {
+    "tables": "0",
+    "functions": "0",
+    "triggers": "0",
+    "event_triggers": "0"
+  },
+  "rolesBeforeSha256": "06f25fd7ea0b453e678df6ea4536e27015d07063b7bba6bd46335821e3c0ae5d",
+  "restoredAt": "2026-10-09T10:21:49.084Z",
+  "rls": {
+    "testRole": "rls_probe_e79a035cbbdd447e9232de8b5c7771c1",
+    "transactionStartedAt": "2026-10-09T10:21:51.006Z",
+    "commits": 0,
+    "rollbackCompleted": true,
+    "originalRoleFingerprint": "06f25fd7ea0b453e678df6ea4536e27015d07063b7bba6bd46335821e3c0ae5d",
+    "probeWrites": 3,
+    "effectiveRole": "authenticated",
+    "rowSecurityActive": {
+      "searchRuns": true,
+      "searchResults": true
+    },
+    "rolledBackAt": "2026-10-09T10:21:53.258Z",
+    "afterRoleFingerprint": "06f25fd7ea0b453e678df6ea4536e27015d07063b7bba6bd46335821e3c0ae5d"
+  },
+  "rolesAfterSha256": "06f25fd7ea0b453e678df6ea4536e27015d07063b7bba6bd46335821e3c0ae5d",
+  "testDatabaseBytes": 9838592,
+  "deletedDatabase": {
+    "id": 678528,
+    "name": "recovery_rls_71ca4ba1bb204384bf44",
+    "owner_name": "neondb_owner",
+    "branch_id": "br-polished-resonance-az03nnva"
+  },
+  "deletedAt": "2026-10-09T10:21:55.200Z",
+  "finalInventory": {
+    "observedAt": "2026-10-09T10:21:56.040Z",
+    "databases": [
+      {
+        "id": 677976,
+        "name": "neondb",
+        "owner_name": "neondb_owner",
+        "branch_id": "br-polished-resonance-az03nnva"
+      }
+    ],
+    "branchIds": [
+      "br-polished-resonance-az03nnva"
+    ],
+    "temporaryDatabaseAbsent": true,
+    "originalDatabasesUnchanged": true
+  },
+  "databaseLifetimeSeconds": 15.27,
+  "completedAt": "2026-10-09T10:21:56.045Z",
+  "sourceScope": "Exact seven Git migrations and fresh local SYNTHETIC metadata; actual authenticated RLS; no application artifact rollback",
+  "evidenceScope": "47 aggregate checks across local fixture, resource guards, cloud PostgreSQL recovery, actual RLS and cleanup",
+  "localPreflight": {
+    "environment": "ISOLATED_LOCAL_PGLITE",
+    "checks": 32,
+    "status": "PASSED"
+  },
+  "independentCleanup": {
+    "observedAt": "2026-10-09T10:22:23.514Z",
+    "method": "OFFICIAL_API_GET_ONLY",
+    "reviewedRunId": "71ca4ba1-bb20-4384-bf44-0c31bdf091b1",
+    "drillStatus": "PASSED",
+    "temporaryDatabaseAbsent": true,
+    "originalDatabaseInventoryUnchanged": true,
+    "originalBranchInventoryUnchanged": true,
+    "reportedRoleFingerprintUnchanged": true,
+    "roleFingerprintIndependentSqlRead": false,
+    "databases": [
+      {
+        "id": 677976,
+        "name": "neondb",
+        "owner_name": "neondb_owner",
+        "branch_id": "br-polished-resonance-az03nnva"
+      }
+    ],
+    "branches": [
+      "br-polished-resonance-az03nnva"
+    ],
+    "reviewerWrites": 0,
+    "reviewerPostgresConnections": 0
+  },
+  "syntheticExportCleanup": {
+    "deletedAt": "2026-10-09T10:23:16.249Z",
+    "matchingChecksumVerified": true,
+    "absent": true,
+    "retainedContent": false
+  }
+}

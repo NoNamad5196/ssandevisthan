@@ -1,0 +1,49 @@
+{
+  "observedAt": "2026-10-09T10:01:00.006Z",
+  "sha": "82c6ddd85aed94d77664d7d40cea3fd84183d2fa",
+  "backendWorkflow": {
+    "id": 37914659936,
+    "url": "https://github.com/NoNamad5196/ssandevisthan/actions/runs/37914659936",
+    "conclusion": "success",
+    "completedAt": "2026-10-09T09:59:18Z"
+  },
+  "artifact": {
+    "id": 11608547200,
+    "name": "backend-82c6ddd85aed94d77664d7d40cea3fd84183d2fa",
+    "bytes": 9454962,
+    "githubArchiveDigest": "sha256:a3779f4630d99bcc1f5a622c8d435348d0f80b01f25cbe125e284bc56a1003fa",
+    "expiresAt": "2026-10-16T09:58:53Z",
+    "manifestSha256": "ae62ce7e11d1ada9a21428601d6dd111979b70c1bbec7eac3a454d9f5f6c0451",
+    "filesVerified": 130,
+    "sourceDirty": false,
+    "platform": "linux-arm64-glibc",
+    "components": [
+      "api",
+      "worker",
+      "sweep"
+    ],
+    "migrationsVerified": 7,
+    "savedPaidFlag": "false"
+  },
+  "recovery": {
+    "artifactId": 11608827033,
+    "checksPassed": 28,
+    "environment": "ISOLATED_LOCAL_PGLITE",
+    "mode": "SYNTHETIC_FIXTURE",
+    "paidProviderCalls": 0,
+    "productionWrites": 0
+  },
+  "health": {
+    "observedAt": "2026-10-09T10:00:12.368Z",
+    "url": "https://br-polished-resonance-az03nnva-api.compute.c-3.ap-southeast-1.aws.neon.tech/health",
+    "status": 200,
+    "service": "SSANDEVISTHAN",
+    "schemaVersion": 3,
+    "backend": "neon",
+    "searchEnabled": false
+  },
+  "limitations": [
+    "CI recovery uses isolated local PGlite; no production cloud rollback or user-data recovery was attempted.",
+    "GitHub archive digest was read from official artifact metadata; every unpacked file was independently checked against the release manifest."
+  ]
+}

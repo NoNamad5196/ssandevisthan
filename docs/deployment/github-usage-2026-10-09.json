@@ -1,0 +1,38 @@
+{
+  "observedAt": "2026-10-09T10:09:32Z",
+  "mode": "LIVE_EXISTING_BROWSER_READ_ONLY",
+  "account": "NoNamad5196",
+  "plan": "GitHub Free",
+  "period": "October 2026",
+  "dashboard": "https://github.com/settings/billing",
+  "product": "Actions",
+  "usage": {
+    "minutesUsed": 23,
+    "minutesIncluded": 2000,
+    "remainingFromDisplayedValues": 1977,
+    "storageUsedDisplayedGB": 0,
+    "storageIncludedGB": 0.5,
+    "grossUSD": 0.14,
+    "includedDiscountUSD": 0.14,
+    "netBillableUSD": 0,
+    "resetDisplayed": "23 days"
+  },
+  "priorObservation": {
+    "observedAt": "2026-10-09T09:18:36Z",
+    "minutesUsed": 14,
+    "remainingFromDisplayedValues": 1986
+  },
+  "evidenceText": [
+    "23 min used / 2,000 min included",
+    "0 GB used / 0.5 GB included",
+    "$0.14 consumed usage - $0.14 discounts = $0 billable"
+  ],
+  "caveats": [
+    "Account-wide counters, not only this repository.",
+    "Storage rounds to 0 GB; this does not prove zero stored bytes.",
+    "Observation precedes the planned final documentation commit and does not include unreflected or later workflow runs."
+  ],
+  "permissionsChanged": false,
+  "planChanged": false,
+  "apiCalls": false
+}

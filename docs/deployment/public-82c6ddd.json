@@ -1,0 +1,81 @@
+{
+  "observedAt": "2026-10-09T10:01:34.602Z",
+  "sha": "82c6ddd85aed94d77664d7d40cea3fd84183d2fa",
+  "mode": "LIVE_PUBLIC_READ_ONLY_EXACT_CI_ARTIFACT",
+  "paidProviderCalls": 0,
+  "uploadTestsRun": 0,
+  "frontendVisualEvidenceReusedFrom": "5486301e0fbf8b2d3c54e1bb2d3b88ab1ad0ff81",
+  "results": [
+    {
+      "origin": "https://ssandevisthan.pages.dev",
+      "http": 200,
+      "indexSha256": "4a406ac2ac612898ab373fe08a0395f17059c435240a644c688594d6baddfca5",
+      "contentType": "text/html; charset=utf-8",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: https:; font-src 'self'; connect-src 'self' https://br-polished-resonance-az03nnva-api.compute.c-3.ap-southeast-1.aws.neon.tech; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+      "assets": [
+        {
+          "path": "/assets/index-B2cdd2pD.js",
+          "status": 200,
+          "bytes": 422379,
+          "sha256": "fd11c330352ec94b78cb1cc09b7b74a66a9187a88aa3fe8b901ce689ad3ad912",
+          "matchesExactCiArtifact": true
+        },
+        {
+          "path": "/assets/index-DRRBgSxm.css",
+          "status": 200,
+          "bytes": 19078,
+          "sha256": "17f4e0e5f53e6a7b5c80d04130b8a19dc72736dacd8562546093e087b97846ab",
+          "matchesExactCiArtifact": true
+        }
+      ]
+    },
+    {
+      "origin": "https://c1563f86.ssandevisthan.pages.dev",
+      "http": 200,
+      "indexSha256": "4a406ac2ac612898ab373fe08a0395f17059c435240a644c688594d6baddfca5",
+      "contentType": "text/html; charset=utf-8",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: https:; font-src 'self'; connect-src 'self' https://br-polished-resonance-az03nnva-api.compute.c-3.ap-southeast-1.aws.neon.tech; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+      "assets": [
+        {
+          "path": "/assets/index-B2cdd2pD.js",
+          "status": 200,
+          "bytes": 422379,
+          "sha256": "fd11c330352ec94b78cb1cc09b7b74a66a9187a88aa3fe8b901ce689ad3ad912",
+          "matchesExactCiArtifact": true
+        },
+        {
+          "path": "/assets/index-DRRBgSxm.css",
+          "status": 200,
+          "bytes": 19078,
+          "sha256": "17f4e0e5f53e6a7b5c80d04130b8a19dc72736dacd8562546093e087b97846ab",
+          "matchesExactCiArtifact": true
+        }
+      ]
+    }
+  ],
+  "backendHealth": {
+    "origin": "https://br-polished-resonance-az03nnva-api.compute.c-3.ap-southeast-1.aws.neon.tech",
+    "http": 200,
+    "service": "SSANDEVISTHAN",
+    "backend": "neon",
+    "schemaVersion": 3,
+    "searchEnabled": false
+  },
+  "workflows": {
+    "verify": {
+      "runId": 37914454856,
+      "conclusion": "success",
+      "url": "https://github.com/NoNamad5196/ssandevisthan/actions/runs/37914454856"
+    },
+    "pages": {
+      "runId": 37914659938,
+      "conclusion": "success",
+      "url": "https://github.com/NoNamad5196/ssandevisthan/actions/runs/37914659938"
+    },
+    "backend": {
+      "runId": 37914659936,
+      "conclusion": "success",
+      "evidence": "docs/deployment/backend-82c6ddd.json"
+    }
+  }
+}

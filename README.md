@@ -65,6 +65,8 @@ OpenAI 외 유료 인프라는 활성화하지 않습니다. 전체 파일럿의
 - `docs/deployment/quota-audit-2026-10-09.json`: 계정에서 확인한 무료 사용량과 확인할 수 없었던 한도.
 - `docs/deployment/recovery-local.json`: 격리된 로컬 PostgreSQL 복구 검사. 클라우드 복구 성공을 뜻하지 않습니다.
 - `docs/deployment/quality-not-measured.json`: 실제 평가 데이터 미제공 상태의 품질 보고서. 지표는 `null`, 출시는 차단 상태입니다.
+- `docs/deployment/public-82c6ddd.json`, `docs/deployment/backend-82c6ddd.json`: 공개 파일과 검증된 CI 산출물 일치, 프론트엔드·백엔드 배포 성공 및 유료 검색 비활성 상태.
+- `docs/deployment/recovery-cloud-rls.json`: 실제 Neon의 별도 테스트 DB에서 합성 복구와 RLS 검증, 임시 역할 롤백 및 DB 정리 증거. 실제 상품 검색·애플리케이션 롤백 증거와 구분합니다.
 
 품질 평가는 `node scripts/evaluate-quality.mjs`로 실행합니다. 입력이 없으면 `NOT_MEASURED`와 출시 차단을 보고하며 종료 코드 1을 반환합니다. 평가 데이터 형식과 사람 검토·holdout 절차는 `packages/quality/README.md`, 배포물 보존과 복구 절차는 `deploy/neon/RECOVERY.md`에 있습니다. 합성 라벨이나 재생 테스트를 실제 사람 평가·LIVE 검색으로 승격하지 않습니다.
 

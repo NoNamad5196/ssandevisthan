@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-09T10:02:52.8509485Z",
+  "environment": "LIVE_NEON_FREE_MANAGEMENT_API",
+  "status": "CLOUD_RECOVERY_NOT_EXECUTED_SCHEMA_ONLY_UNSUPPORTED",
+  "project": "lucky-sun-06718695",
+  "sourceBranch": "br-polished-resonance-az03nnva",
+  "totalCreateRequests": 3,
+  "requestStatuses": [
+    400,
+    412,
+    412
+  ],
+  "finalRequestedCompute": {
+    "type": "read_write",
+    "minCU": 0.25,
+    "maxCU": 0.25,
+    "suspendTimeoutSeconds": 0,
+    "effectiveFreeIdleSeconds": 300
+  },
+  "finalRejection": {
+    "httpStatus": 412,
+    "sanitizedServerMessage": "project with a legacy web access role do not support schema-only branches; role:\"service_role\"",
+    "legacyRole": "service_role"
+  },
+  "priorRequestDiagnosticLoss": "The first compute-inclusive 412 body was not retained; this final separately authorized attempt established the same-request precondition message.",
+  "finalInventory": {
+    "observedAt": "2026-10-09T10:02:52.8509485Z",
+    "branchCount": 1,
+    "branchIds": [
+      "br-polished-resonance-az03nnva"
+    ],
+    "uniqueNewNameMatches": 0,
+    "missingOriginalIds": [],
+    "noCreatedResourceConfirmed": true
+  },
+  "successfulResourceCreates": 0,
+  "databaseWrites": 0,
+  "productionResourceMutations": 0,
+  "productionDataExports": 0,
+  "functionInvocations": 0,
+  "paidProviderCalls": 0,
+  "permissionExpansions": 0,
+  "billingChanges": 0,
+  "liveProductSearchSuccess": false,
+  "cloudPostgresRecoveryVerified": false,
+  "roleOrProtectionBypassAttempted": false,
+  "limitations": [
+    "Schema-only function/secret/trigger/storage inheritance was not observed because creation was rejected.",
+    "The existing service_role was preserved. No role removal, renaming, protection change or access-control workaround was attempted.",
+    "Local isolated SYNTHETIC recovery evidence remains separate; no cloud database restore, RLS test or RPO/RTO was established."
+  ],
+  "officialReferences": [
+    "https://neon.com/docs/guides/branching-schema-only",
+    "https://neon.com/docs/reference/api/branches/create-project-branch"
+  ]
+}
