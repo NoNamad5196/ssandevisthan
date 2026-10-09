@@ -4,7 +4,7 @@ import {quoteCost} from '../../../supabase/shared/providers/openai.ts';
 describe('disabled budget bootstrap (no network or paid request)',()=>{
  it('uses exact decimal microdollars and the actual shared cost calculator',()=>{
   expect(parseUsd('1.000001')).toBe(1000001);expect(parseUsd('0')).toBe(0);
-  expect(['analysis','discovery','comparison'].map(op=>quoteCost(rateSnapshot as any,op))).toEqual([5310000,10525000,5370000]);
+  expect(['analysis','discovery','comparison'].map(op=>quoteCost(rateSnapshot,op))).toEqual([5310000,10525000,5370000]);
  });
  it.each(['-1','1e2','1.0000001','NaN','20 USD'])('rejects ambiguous amount %s',value=>expect(()=>parseUsd(value)).toThrow());
  it.each([{enabled:true,history_verified_at:null,spent_microusd:'0'},{enabled:false,history_verified_at:'2026-10-09',spent_microusd:'0'},{enabled:false,history_verified_at:null,spent_microusd:'100'}])('refuses enabled, previously reconciled or decreasing-ledger mutation',async previous=>{
