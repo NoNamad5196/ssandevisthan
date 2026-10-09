@@ -57,7 +57,10 @@ assert.equal(hash(gmarket), 'ff7c354dd1a324e4cecc1223c4f71e74fa81be7027e0c7f6324
 const names = sfntNames(gmarket);
 const licenses = names.filter(record => record.nameId === 13);
 assert(licenses.some(record => record.text.includes('SIL Open Font License')));
-assert.equal(await readFile('design/font-license/GmarketSans-OFL.txt', 'utf8'), licenses.map(record => record.text).join('\n\n') + '\n', 'Committed Gmarket notice preserves every embedded license record');
+// Git normalizes text checkouts to LF on Linux while the vendor's embedded
+// SFNT records contain CRLF. Compare all content with only line endings normalized.
+const normalizeLineEndings = value => value.replaceAll('\r\n', '\n');
+assert.equal(normalizeLineEndings(await readFile('design/font-license/GmarketSans-OFL.txt', 'utf8')), normalizeLineEndings(licenses.map(record => record.text).join('\n\n') + '\n'), 'Committed Gmarket notice preserves every embedded license record');
 assert.deepEqual(JSON.parse(await readFile('design/font-license/GmarketSans-metadata.json', 'utf8')), {
   source: 'https://corp.gmarket.com/fonts/GmarketSansTTF.zip',
   informationPage: 'https://corp.gmarket.com/fonts/',

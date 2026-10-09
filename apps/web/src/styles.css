@@ -16,6 +16,10 @@
 
 /* Original artwork under accessible DOM controls. Keep desktop coordinates immutable. */
 @media(min-width:768px){
+ .header{background:#090c0f url('/artwork/header-surface.png') 0 0/1586px 55px no-repeat}
+ .header nav{gap:34px;font-size:19px;font-weight:500}
+ .header nav .nav-active{font-size:20px;font-weight:750}
+ .deals{background:#090e12 url('/artwork/deal-surface.png') 0 0/1586px 171px no-repeat}
  .hero{background-color:#fbff20;background-image:url('/artwork/hero-surface.png'),url('/artwork/subhead-fill.png'),url('/artwork/upload-copy-fill.png'),url('/artwork/upload-control-fill.png'),url('/artwork/upload-help-fill.png'),url('/artwork/steps-fill.png');background-position:0 0,50px 299px,202px 459px,182px 542px,289px 613px,59px 677px;background-size:1586px 766px,707px 44px,427px 77px,450px 70px,250px 25px,698px 68px;background-repeat:no-repeat}
  .hero-edge,.hero-collage{display:none}
  /* The distinctive hero lettering is retained in the original artwork, with semantic text for assistive technology. */

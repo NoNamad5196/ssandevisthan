@@ -33,6 +33,16 @@ const mask=Buffer.from(`<svg width="1586" height="766">${cutouts.map(([x,y,w,h])
 const surface=await sharp(bytes).extract({left:0,top:55,width:1586,height:766}).ensureAlpha().composite([{input:mask,blend:'dest-out'}]).png().toBuffer();
 await writeFile('apps/web/public/artwork/hero-surface.png',surface);
 manifest.assets.push({path:'apps/web/public/artwork/hero-surface.png',sourceRect:{left:0,top:55,width:1586,height:766},sha256:hash(surface),transform:'original pixels; functional regions cleared for DOM text',cutouts});
+// Preserve the header and lower industrial texture around the real navigation/search controls.
+for(const [name,top,height,cutouts] of [
+ ['header-surface',0,55,[[1277,10,274,39]]],
+ ['deal-surface',821,171,[[31,24,447,97],[515,24,590,116]]],
+]){
+ const mask=Buffer.from(`<svg width="1586" height="${height}">${cutouts.map(([x,y,w,h])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="white"/>`).join('')}</svg>`);
+ const png=await sharp(bytes).extract({left:0,top,width:1586,height}).ensureAlpha().composite([{input:mask,blend:'dest-out'}]).png().toBuffer();
+ const path=`apps/web/public/artwork/${name}.png`;await writeFile(path,png);
+ manifest.assets.push({path,sourceRect:{left:0,top,width:1586,height},sha256:hash(png),transform:'original pixels; functional regions cleared for DOM text',cutouts});
+}
 // Reuse clean adjacent yellow texture behind actual UI text; never synthesize artwork.
 const fills=[
  ['subhead-fill',[50,388,707,12],707,44],

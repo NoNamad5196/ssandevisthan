@@ -173,6 +173,50 @@
       ]
     },
     {
+      "path": "apps/web/public/artwork/header-surface.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 1586,
+        "height": 55
+      },
+      "sha256": "ba8286d0bb3b767b74d4155f7c3a4ac2060cfff0cb93e16038f8ce51c10b59d8",
+      "transform": "original pixels; functional regions cleared for DOM text",
+      "cutouts": [
+        [
+          1277,
+          10,
+          274,
+          39
+        ]
+      ]
+    },
+    {
+      "path": "apps/web/public/artwork/deal-surface.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 821,
+        "width": 1586,
+        "height": 171
+      },
+      "sha256": "e5fe8ed921c2f0fa22a3548c1fa53dd327075ee55ad13cc5942012499827bef0",
+      "transform": "original pixels; functional regions cleared for DOM text",
+      "cutouts": [
+        [
+          31,
+          24,
+          447,
+          97
+        ],
+        [
+          515,
+          24,
+          590,
+          116
+        ]
+      ]
+    },
+    {
       "path": "apps/web/public/artwork/subhead-fill.png",
       "sourceRect": {
         "left": 50,
