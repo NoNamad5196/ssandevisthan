@@ -44,3 +44,4 @@
  .search-field:before{content:'';position:absolute;inset:1px;background:#090e12;clip-path:inherit;z-index:-1}
 }
 @media(max-width:767px){.hero-collage{clip-path:polygon(20% 0,100% 0,100% 100%,0 100%,0 45%)}}
+.product-warning{font-size:13px;line-height:1.5;color:#ffe37b;border-left:2px solid #ffe37b;padding-left:9px;margin-top:12px}

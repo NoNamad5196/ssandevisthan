@@ -20,7 +20,8 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL ? undefined : {
     command: 'npm run dev --workspace @ssandevisthan/web -- --port 4175 --strictPort',
     url: 'http://127.0.0.1:4175',
-    reuseExistingServer: !process.env.CI,
+    env: { VITE_API_BASE_URL: 'https://mock-api.ssandevisthan.test' },
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 });
