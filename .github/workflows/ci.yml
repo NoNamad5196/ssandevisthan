@@ -37,6 +37,15 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Validate desktop and mobile flows without live API calls
         run: npm run test:e2e
+      - name: Compare the full desktop capture with the original mockup
+        run: node scripts/verify-visual.mjs
+      - name: Retain visual comparison and accessible UI captures
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: visual-${{ github.sha }}
+          path: test-results/visual
+          if-no-files-found: error
+          retention-days: 3
       - name: Retain browser failure evidence
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

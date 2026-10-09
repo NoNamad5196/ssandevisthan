@@ -12,6 +12,29 @@ const viewports = [
   { width: 360, height: 800 },
 ];
 
+test('high contrast keeps original-artwork captions readable and upload usable', async ({ page }) => {
+  await page.setViewportSize({ width: 1586, height: 992 });
+  await page.emulateMedia({ forcedColors: 'active' });
+  await page.goto('/');
+  await waitForArtwork(page);
+  // High-contrast mode removes decorative backgrounds. The corresponding DOM
+  // captions must remain readable rather than disappearing with their artwork.
+  for (const selector of ['.headline', '.subhead', '.steps p', '.deal-copy h2', '.deal-copy>p']) {
+    const colors = await page.locator(selector).evaluateAll(elements => elements.map(element => {
+      const color = getComputedStyle(element).color;
+      const sectionColor = getComputedStyle(element.closest('section')!).backgroundColor;
+      return { color, sectionColor };
+    }));
+    expect(colors.every(({ color, sectionColor }) => color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)' && color !== sectionColor)).toBe(true);
+  }
+  await page.locator('#clothes-photo').setInputFiles(resolve('apps/web/public/artwork/hero-collage.png'));
+  await expect(page.getByRole('button', { name: '비슷한 옷 찾기', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '삭제', exact: true }).click();
+  await expect(page.getByRole('button', { name: '사진 올리기', exact: true })).toBeVisible();
+  await mkdir(captures, { recursive: true });
+  await page.screenshot({ path: resolve(captures, 'home-high-contrast.png'), fullPage: true });
+});
+
 for (const viewport of viewports) {
   test(`home renders functional controls without overflow at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);

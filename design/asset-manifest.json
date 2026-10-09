@@ -137,15 +137,9 @@
         "width": 1586,
         "height": 766
       },
-      "sha256": "e0a881af566877f18fef28daf43df7194707bb574e607c8bb25dde8673a56790",
+      "sha256": "4fa57a578edc2d4fd923712ac68b6000486657198b2eb80193af1aa69f696f81",
       "transform": "original pixels; functional regions cleared for DOM text",
       "cutouts": [
-        [
-          50,
-          299,
-          707,
-          44
-        ],
         [
           202,
           459,
@@ -163,12 +157,6 @@
           613,
           250,
           25
-        ],
-        [
-          59,
-          677,
-          698,
-          68
         ]
       ]
     },
@@ -199,15 +187,9 @@
         "width": 1586,
         "height": 171
       },
-      "sha256": "e5fe8ed921c2f0fa22a3548c1fa53dd327075ee55ad13cc5942012499827bef0",
+      "sha256": "4f76ba663c613ef908f2f011faf100e706efc75b0e2084589e744c37b0989ba2",
       "transform": "original pixels; functional regions cleared for DOM text",
       "cutouts": [
-        [
-          31,
-          24,
-          447,
-          97
-        ],
         [
           515,
           24,

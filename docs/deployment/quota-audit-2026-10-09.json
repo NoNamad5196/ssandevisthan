@@ -1,0 +1,131 @@
+{
+  "observedAt": "2026-10-09T09:18:36Z",
+  "environment": "LIVE_ACCOUNT_DASHBOARDS_READ_ONLY",
+  "changesMade": [],
+  "github": {
+    "account": "NoNamad5196",
+    "plan": "GitHub Free",
+    "scope": "Account-wide Actions included usage, October 2026",
+    "observed": {
+      "minutesUsed": 14,
+      "minutesIncluded": 2000,
+      "minutesRemainingFromDisplayedValues": 1986,
+      "storageUsedDisplayedGB": 0,
+      "storageIncludedGB": 0.5,
+      "grossUSD": 0.09,
+      "includedDiscountUSD": 0.09,
+      "netBillableUSD": 0,
+      "resetDisplayed": "23 days"
+    },
+    "evidenceText": [
+      "Actions minutes: 14 min used / 2,000 min included",
+      "Actions storage: 0 GB used / 0.5 GB included",
+      "$0.09 consumed usage minus $0.09 discounts; $0 total billable usage"
+    ],
+    "dashboard": "https://github.com/settings/billing",
+    "officialAllowance": "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "caveats": [
+      "Counters are an observation of the billing dashboard, not a promise that subsequent CI is already included.",
+      "Storage is rounded; 0 GB is not evidence of exactly zero bytes.",
+      "Billing REST lookup with existing gh authorization returned 404 and requested user scope. No scope expansion was performed; dashboard supplied the data."
+    ]
+  },
+  "neon": {
+    "organization": "org-cool-smoke-12777013",
+    "project": "lucky-sun-06718695",
+    "plan": "Free",
+    "monthlyPlanUSD": 0,
+    "observedOrganization": {
+      "projects": 1,
+      "projectBranches": 1,
+      "computeCUHoursDisplayed": 0.15,
+      "postgresStorageGBDisplayed": 0.03,
+      "historyGBDisplayed": 0.01,
+      "networkTransferGBDisplayed": 0,
+      "usageSince": "2026-10-09"
+    },
+    "quota": {
+      "functions": {
+        "activeCapacityHoursPerMonth": 10,
+        "waitingCapacityHoursPerMonth": 400,
+        "invocationsPerMonth": 1000000,
+        "enforcement": "Separate account-wide total across projects and per-project limits",
+        "actualAccountUsage": null,
+        "actualProjectUsage": null,
+        "actualAccountRemaining": null,
+        "actualProjectRemaining": null
+      },
+      "postgresPerProject": {
+        "computeCUHoursPerMonth": 100,
+        "storageGB": 1
+      },
+      "freeProjects": 100,
+      "freeBranchesPerProject": 10
+    },
+    "dashboard": "https://console.neon.tech/app/org-cool-smoke-12777013/projects",
+    "billingDashboard": "https://console.neon.tech/app/org-cool-smoke-12777013/billing",
+    "missingFunctionsMetricsReason": "Official plans documentation explicitly excludes Neon Functions from Console usage summaries. The Free billing page has no usage invoice control (View/Pay invoices disabled). Official consumption v2 requires an eligible paid plan and lists no Functions active/wait/invocation metric. No supported Free read path for those remaining counters was established.",
+    "scopeCaveats": [
+      "The organization list is not an audit of all projects across every account organization; it cannot prove account-wide Functions headroom.",
+      "Console says metrics may be delayed by one hour and are not updated for inactive projects.",
+      "Rounded database metrics must not be substituted for Functions metrics."
+    ],
+    "objectStorage": {
+      "source": "docs/deployment/storage-usage-live.json",
+      "observedAt": "2026-10-09T08:53:45.199Z",
+      "currentObjects": 10,
+      "currentBytes": 18495,
+      "documentedFreePerProjectBytes": 5000000000,
+      "limitation": "Current S3 object metadata inventory, not historical billing GB-month usage."
+    },
+    "sources": [
+      "https://neon.com/docs/introduction/plans#functions",
+      "https://neon.com/docs/introduction/plans#usage-metrics",
+      "https://api-docs.neon.tech/reference/getconsumptionhistoryperprojectv2",
+      "https://api-docs.neon.tech/reference/getconsumptionhistoryperbranchv2"
+    ]
+  },
+  "cloudflare": {
+    "account": "3090656c79030b35ada882ed558a0d6b",
+    "project": "ssandevisthan",
+    "deploymentMode": "Prebuilt asset Direct Upload using GitHub Actions and Wrangler",
+    "documentedFreeBuildsPerMonth": 500,
+    "documentedConcurrentBuildsPerAccount": 1,
+    "actualPagesMonthlyBuildsUsed": null,
+    "actualPagesMonthlyBuildsRemaining": null,
+    "observedAccountDashboard": {
+      "workersRequestsToday": 0,
+      "workersRequestsTodayLimit": 100000,
+      "observabilityEventsToday": 0,
+      "observabilityEventsTodayLimit": 200000,
+      "workersBuildMinutes": 0,
+      "workersCostUSDDisplayed": 0
+    },
+    "observedProjectDashboard": {
+      "visibleDeployments": 4,
+      "latestDeployment": "978929ac-5d23-49c4-b362-0c0ede8df1f8",
+      "metricsRange": "Last 24 hours",
+      "metricsState": "No data is available for this time range",
+      "webAnalytics": "disabled"
+    },
+    "missingPagesBuildMetricsReason": "The account Workers & Pages Usage/View limits shows Workers requests, observability and Workers build minutes, not a Pages monthly build counter. Project Deployments lists deployments and Metrics contains function request charts, not the account monthly Pages build meter. The public Pages API documentation inspected lists project/deployment endpoints without a remaining-build counter. Therefore neither zero usage nor 500-minus-project-deployments is asserted.",
+    "scopeCaveats": [
+      "Workers build minutes are not Pages build usage.",
+      "Deployment count is not established as billing quota consumption, especially for prebuilt Direct Upload, and account includes another existing project.",
+      "This review did not establish whether Direct Upload deployments debit the monthly built-in build allowance."
+    ],
+    "sources": [
+      "https://developers.cloudflare.com/pages/platform/limits/",
+      "https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/",
+      "https://developers.cloudflare.com/api/resources/pages/"
+    ]
+  },
+  "prohibitedActionsNotTaken": [
+    "No paid plan or paid feature enabled",
+    "No billing/payment mutation",
+    "No cost-verification flag changed",
+    "No credential permission expansion",
+    "No merchant requests",
+    "No paid OpenAI call"
+  ]
+}
