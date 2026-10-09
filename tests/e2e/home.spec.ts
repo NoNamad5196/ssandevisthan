@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const captures = resolve('test-results/visual');
@@ -67,6 +67,13 @@ test('upload validation and replacement work without invoking a provider', async
   await input.setInputFiles(resolve('apps/web/public/artwork/hero-collage.png'));
   await expect(page.getByRole('img', { name: '선택한 의류 사진 미리보기' })).toBeVisible();
   await expect(page.getByRole('button', { name: '비슷한 옷 찾기', exact: true })).toBeVisible();
+  await expect(page.getByText('검색할 때 사진을 OpenAI에 전달해요.')).toBeVisible();
+  await page.getByRole('button', { name: '사진 처리 안내', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog')).toContainText('외부 제공자의 기록 삭제를 의미하지 않습니다');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.getByRole('button', { name: '사진 처리 안내', exact: true })).toBeFocused();
   await page.screenshot({ path: resolve(captures, 'upload-selected-390x844.png'), fullPage: true, animations: 'disabled' });
   await page.getByRole('button', { name: '삭제', exact: true }).click();
   await expect(page.getByRole('button', { name: '사진 올리기', exact: true })).toBeVisible();
@@ -87,4 +94,27 @@ test('hot-deal validation, keyboard focus, and reduced motion are usable', async
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: '검색하기', exact: true })).toBeFocused();
   expect(await page.getByRole('button', { name: '사진 올리기', exact: true }).evaluate(button => getComputedStyle(button).transitionDuration)).toBe('0s');
+});
+
+test('a late image decode cannot replace the most recently selected photo', async ({ page }) => {
+  await page.addInitScript(() => {
+    const native = window.createImageBitmap.bind(window);
+    window.createImageBitmap = async (...args: any[]) => {
+      const bitmap = await (native as any)(...args);
+      if (args[0] instanceof File && args[0].name === 'slow.png') {
+        await new Promise<void>(resolve => { (window as any).releaseOldPhoto = resolve; });
+      }
+      return bitmap;
+    };
+  });
+  await page.goto('/');
+  const buffer = await readFile(resolve('apps/web/public/artwork/hero-collage.png'));
+  await page.locator('#clothes-photo').setInputFiles({ name: 'slow.png', mimeType: 'image/png', buffer });
+  await page.waitForFunction(() => typeof (window as any).releaseOldPhoto === 'function');
+  await page.locator('#clothes-photo').setInputFiles({ name: 'current.png', mimeType: 'image/png', buffer });
+  const preview = page.getByRole('img', { name: '선택한 의류 사진 미리보기' });
+  await expect(preview).toBeVisible();
+  const currentUrl = await preview.getAttribute('src');
+  await page.evaluate(async () => { (window as any).releaseOldPhoto(); await new Promise(resolve => setTimeout(resolve, 100)); });
+  await expect(preview).toHaveAttribute('src', currentUrl!);
 });

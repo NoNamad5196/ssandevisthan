@@ -31,6 +31,8 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
       - name: Verify original assets and font notices
         run: node scripts/verify-assets.mjs
+      - name: Check tracked source and frontend artifact for credentials
+        run: node scripts/verify-secrets.mjs
       - name: Install browser for deterministic UI checks
         run: npx playwright install --with-deps chromium
       - name: Validate desktop and mobile flows without live API calls

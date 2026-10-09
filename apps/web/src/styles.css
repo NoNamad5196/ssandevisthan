@@ -49,3 +49,10 @@
 }
 @media(max-width:767px){.hero-collage{clip-path:polygon(20% 0,100% 0,100% 100%,0 100%,0 45%)}}
 .product-warning{font-size:13px;line-height:1.5;color:#ffe37b;border-left:2px solid #ffe37b;padding-left:9px;margin-top:12px}
+.privacy-dialog{width:min(560px,calc(100vw - 32px));max-height:85vh;overflow:auto;border:1px solid var(--brand-yellow);background:#10171d;color:#f5f7fa;padding:28px;text-align:left;line-height:1.65}
+.privacy-dialog::backdrop{background:#000b}
+.upload-panel .privacy-dialog h2{position:static;font-size:22px;line-height:1.4;color:var(--brand-yellow);padding:0;margin-bottom:16px}
+.privacy-dialog p{font-size:14px;margin:12px 0}
+.privacy-dialog a{display:inline-flex;gap:6px;align-items:center;font-size:14px;text-decoration:underline;color:#b0eff1}
+.file-actions .privacy-dialog svg{width:16px;height:16px}
+.file-actions .privacy-dialog .close-policy{font-size:15px;display:block;background:var(--brand-yellow);color:var(--ink);padding:10px 28px;margin-top:20px;min-height:44px}

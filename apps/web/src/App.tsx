@@ -6,21 +6,24 @@ import { active, errorMessage, request, stageLabel, type Results, type Result, t
 
 function Header(){return <header className="header"><Link to="/" aria-label="싼데비슷한 홈"><img src="/artwork/header-logo.png" alt="싼데비슷한" /></Link><nav aria-label="주 메뉴"><Link className="nav-active" to="/">비슷한 옷 찾기</Link><span aria-hidden="true"/><a href="/#deals">핫딜 찾기</a></nav></header>}
 
+function PrivacyNotice(){const dialog=useRef<HTMLDialogElement>(null);return <><button type="button" onClick={()=>dialog.current?.showModal()}>사진 처리 안내</button><dialog ref={dialog} className="privacy-dialog" aria-labelledby="privacy-title"><h2 id="privacy-title">사진과 검색 기록 처리 안내</h2><p>검색할 때 크기를 줄이고 위치 등 메타데이터를 제거한 의류 사진, 사진에서 찾은 특징과 검색어를 OpenAI API로 전달합니다. 상품 발견에는 OpenAI의 웹 검색을 사용합니다.</p><p>업로드 원본은 서버 메모리에서만 처리합니다. 변환한 사진은 비공개 저장소에 최대 1시간 보관하며, 검색 종료 후 5분 이내 삭제를 목표로 합니다. 검색과 사진을 직접 삭제할 수도 있습니다.</p><p>검색 기록은 7일, 익명 로그인 세션은 30일 동안 유지됩니다. 브라우저 저장소를 지우면 이전 기록에 다시 접근할 수 없습니다.</p><p>OpenAI 응답 저장 기능은 끄지만, 제공자의 보안·오남용 감시 등 별도 보존 정책은 적용될 수 있습니다. 여기서 사진을 삭제해도 외부 제공자의 기록 삭제를 의미하지 않습니다.</p><a href="https://developers.openai.com/api/docs/guides/your-data" target="_blank" rel="noopener noreferrer">OpenAI 데이터 처리 정책 보기 <ExternalLink/></a><form method="dialog"><button className="close-policy">확인</button></form></dialog></>}
+
 function UploadPanel(){
  const input=useRef<HTMLInputElement>(null);const nav=useNavigate();
  const [file,setFile]=useState<File>();const [preview,setPreview]=useState('');const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [drag,setDrag]=useState(false);
+ const selectionEpoch=useRef(0);
  const operation=useRef<{key:string;uploadId?:string;stored?:boolean;ready?:boolean}>({key:crypto.randomUUID()});
  useEffect(()=>{if(!file){setPreview('');return;}const url=URL.createObjectURL(file);setPreview(url);return()=>URL.revokeObjectURL(url)},[file]);
  async function choose(next?:File){
-  if(!next)return;setError('');
+  if(!next||busy)return;const epoch=++selectionEpoch.current;setError('');
   if(!['image/jpeg','image/png','image/webp'].includes(next.type)){setError('JPG, PNG, WEBP 사진 한 장을 선택해 주세요.');return;}
   if(!next.size||next.size>10_000_000){setError('사진은 최대 10MB까지 올릴 수 있어요.');return;}
-  try{const decoded=await createImageBitmap(next);const pixels=decoded.width*decoded.height;decoded.close();if(pixels>24_000_000){setError('사진 해상도는 최대 2,400만 화소까지 지원해요.');return;}}catch{setError('사진을 읽을 수 없어요. 다른 사진을 선택해 주세요.');return;}
+  try{const decoded=await createImageBitmap(next);const pixels=decoded.width*decoded.height;decoded.close();if(epoch!==selectionEpoch.current)return;if(pixels>24_000_000){setError('사진 해상도는 최대 2,400만 화소까지 지원해요.');return;}}catch{if(epoch===selectionEpoch.current)setError('사진을 읽을 수 없어요. 다른 사진을 선택해 주세요.');return;}
   if(operation.current.uploadId)void request(`/uploads/${operation.current.uploadId}`,{method:'DELETE'}).catch(()=>{});
   operation.current={key:crypto.randomUUID()};setFile(next);
  }
  async function start(){
-  if(!file||busy)return;setBusy(true);setError('');
+  if(!file||busy)return;++selectionEpoch.current;setBusy(true);setError('');
   try{
    const op=operation.current;
    if(!op.uploadId){const upload=await request<{uploadId:string}>('/uploads',{method:'POST',body:{schemaVersion:3,declaredMimeType:file.type,declaredBytes:file.size}});op.uploadId=upload.uploadId;}
@@ -30,11 +33,11 @@ function UploadPanel(){
    nav(`/search/${run.searchId}`);
   }catch(e){setError(errorMessage(e));}finally{setBusy(false);}
  }
- function clear(){if(operation.current.uploadId)void request(`/uploads/${operation.current.uploadId}`,{method:'DELETE'}).catch(()=>{});operation.current={key:crypto.randomUUID()};setFile(undefined);setError('');if(input.current)input.current.value='';}
+ function clear(){++selectionEpoch.current;if(operation.current.uploadId)void request(`/uploads/${operation.current.uploadId}`,{method:'DELETE'}).catch(()=>{});operation.current={key:crypto.randomUUID()};setFile(undefined);setError('');if(input.current)input.current.value='';}
  return <div className={`upload-wrap ${drag?'dragging':''}`} onDragOver={e=>{e.preventDefault();if(!busy)setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);if(!busy){if(e.dataTransfer.files.length!==1)setError('의류 사진 한 장만 선택해 주세요.');else void choose(e.dataTransfer.files[0]);}}}>
   <div className="upload-panel">
    <input ref={input} id="clothes-photo" className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e=>void choose(e.target.files?.[0])} aria-label="의류 사진 업로드" aria-describedby="upload-help upload-error" />
-   {file?<>{preview&&<img className="upload-preview" src={preview} alt="선택한 의류 사진 미리보기"/>}<h2>이 옷과 비슷한 상품을 찾아볼까요?</h2><p className="upload-description">사진과 충분히 닮은 국내 새상품의 가격을 비교해요.</p><div className="file-actions"><button disabled={busy} onClick={()=>input.current?.click()}><RefreshCw/> 사진 교체</button><button disabled={busy} onClick={clear}><X/> 삭제</button></div><button className="upload-cta" disabled={busy} onClick={()=>void start()}>{busy?<LoaderCircle className="spin"/>:<Search/>}<span>{busy?'사진을 준비하고 있어요.':'비슷한 옷 찾기'}</span><ArrowRight/></button></>:
+   {file?<>{preview&&<img className="upload-preview" src={preview} alt="선택한 의류 사진 미리보기"/>}<h2>이 옷과 비슷한 상품을 찾아볼까요?</h2><p className="upload-description">검색할 때 사진을 OpenAI에 전달해요.</p><div className="file-actions"><button disabled={busy} onClick={()=>input.current?.click()}><RefreshCw/> 사진 교체</button><button disabled={busy} onClick={clear}><X/> 삭제</button><PrivacyNotice/></div><button className="upload-cta" disabled={busy} onClick={()=>void start()}>{busy?<LoaderCircle className="spin"/>:<Search/>}<span>{busy?'사진을 준비하고 있어요.':'비슷한 옷 찾기'}</span><ArrowRight/></button></>:
    <><img className="upload-icon" src="/artwork/image-add.png" alt=""/><h2>찾고 싶은 옷 사진을 올려주세요</h2><p className="upload-description">옷 한 장만 올리면, 같은 스타일의 더 저렴한 상품을 찾아드려요.</p><button className="upload-cta" onClick={()=>input.current?.click()}><Upload/><span>사진 올리기</span><ArrowRight/></button></>}
    <p id="upload-help" className="upload-help">JPG, PNG, WEBP (최대 10MB)</p><p id="upload-error" className="upload-error" role="alert">{error}</p>
   </div>
